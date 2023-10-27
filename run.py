@@ -1,3 +1,4 @@
+import sys
 
 from bauhaus import Encoding, proposition, constraint
 from bauhaus.utils import count_solutions, likelihood
@@ -50,8 +51,33 @@ class OutOfBounds(Hashable):
     def __repr__(self):
         return f"({self.i} {self.j} O)"
 
-black_squares = {1:{(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)}}
-white_squares = {1:{(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)}}
+@proposition(E)
+class Surrounded(Hashable):
+
+    def __init__(self, i, j):
+        self.i = i
+        self.j = j
+
+    def __repr__(self):
+        return f"({self.i} {self.j} S)"
+    
+@proposition(E)
+class WhiteCaptured(Hashable):
+
+    # def __init__(self):
+    #     self
+
+    def __repr__(self):
+        return f"White Captured?"
+# 
+black_squares = {
+    1:{(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+    2:{(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)}
+    }
+white_squares = {
+    1:{(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+    2:{(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)}
+                 }
 surrounded = []
 
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
@@ -68,11 +94,12 @@ surrounded = []
 
 #     def __repr__(self):
 #         return f"A.{self.data}"
-
+VERSION = int(sys.argv[1])
 GRID_SIZE = 5
-blk_dots = []
-wht_dots = []
-oob_dots = []
+blk_dots = set()
+wht_dots = set()
+oob_dots = set()
+srr_dots = set()
 
 # Build an example full theory for your setting and return it.
 #
@@ -81,16 +108,43 @@ oob_dots = []
 #  what the expectations are.
 def build_theory():
     
-    example_game(1)
+    example_game(VERSION)
     for dot in blk_dots:
         i,j = dot.i,dot.j
         E.add_constraint(~(BlackOccupied(i,j) & WhiteOccupied(i,j)))
     for dot in oob_dots:
         i,j = dot.i, dot.j
         E.add_constraint(OutOfBounds(i,j)>>BlackOccupied(i,j))
+        blk_dots.add(BlackOccupied(i,j)) #All oob_dots are considered black dots
+    for i in range(GRID_SIZE):
+        for j in range(GRID_SIZE):
+            if WhiteOccupied(f"i{i}",f"j{j}") in wht_dots:
+                if surrounded(i,j):
+                    E.add_constraint(Surrounded(f"i{i}",f"j{j}"))
+                    srr_dots.add(Surrounded(f"i{i}",f"j{j}"))
+                else:
+                    E.add_constraint(~Surrounded(f"i{i}",f"j{j}"))
+                    E.add_constraint(~WhiteCaptured())
+            else:
+                E.add_constraint(~Surrounded(f"i{i}",f"j{j}"))
+    E.add_constraint(WhiteCaptured())
     return E
 
-def out_of_bounds(i, j):
+def is_stone(i, j):
+    if BlackOccupied(f"i{i}",f"j{j}") in blk_dots:
+        return True
+    if WhiteOccupied(f"i{i}",f"j{j}") in wht_dots:
+        return True
+    return False
+
+def surrounded(i, j):
+    if out_of_bounds(i, j) or BlackOccupied(f"i{i}",f"j{j}") in blk_dots:
+        return False
+    if is_stone(i+1,j) and is_stone(i,j+1) and is_stone(i-1,j) and is_stone(i,j-1):
+        return True
+    return False
+
+def out_of_bounds(i, j) -> bool:
     if (i < 0 or j < 0 or i >= GRID_SIZE or j >= GRID_SIZE):
         return True
     return False
@@ -100,15 +154,16 @@ def example_game(version):
         for j in range(-2,GRID_SIZE+2):
             if out_of_bounds(i,j):
                 E.add_constraint(OutOfBounds(f"i{i}",f"j{j}"))
-                oob_dots.append(OutOfBounds(f"i{i}",f"j{j}"))
+                oob_dots.add(OutOfBounds(f"i{i}",f"j{j}"))
             else:
                 if (i,j) in black_squares[version] or out_of_bounds(i,j):
                     E.add_constraint(BlackOccupied(f"i{i}",f"j{j}"))
-                    blk_dots.append(BlackOccupied(f"i{i}",f"j{j}"))
+                    blk_dots.add(BlackOccupied(f"i{i}",f"j{j}"))
                 else:
                     E.add_constraint(~BlackOccupied(f"i{i}",f"j{j}"))
                 if (i,j) in white_squares[version]:
                     E.add_constraint(WhiteOccupied(f"i{i}",f"j{j}"))
+                    wht_dots.add(WhiteOccupied(f"i{i}",f"j{j}"))
                 else:
                     E.add_constraint(~WhiteOccupied(f"i{i}",f"j{j}"))
             
@@ -128,12 +183,29 @@ def example_theory():
     return E
 
 def print_board(sol):
+    """unused"""
     for j in range(GRID_SIZE):
         out = ""
         for i in range(GRID_SIZE):
             if sol[BlackOccupied(f"i{i}",f"j{j}")]:
                 out+="⚫"
+            elif sol[Surrounded(f"i{i}", f"j{j}")]:
+                out+="🚫"
             elif sol[WhiteOccupied(f"i{i}",f"j{j}")]:
+                out+="⚪"
+            else:
+                out+="🟫"
+        print(out)
+
+def print_dots():
+    for j in range(GRID_SIZE):
+        out = ""
+        for i in range(GRID_SIZE):
+            if BlackOccupied(f"i{i}",f"j{j}") in blk_dots:
+                out+="⚫"
+            elif Surrounded(f"i{i}", f"j{j}") in srr_dots:
+                out+="🚫"
+            elif WhiteOccupied(f"i{i}",f"j{j}") in wht_dots:
                 out+="⚪"
             else:
                 out+="🟫"
@@ -158,4 +230,9 @@ if __name__ == "__main__":
     # print()
     
     #print(sol)
-    print_board(sol)
+    if sol == None:
+        print("White is not captured")
+        print_dots()
+    else:
+        print("White is captured.")
+        print_dots()
