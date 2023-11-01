@@ -10,7 +10,19 @@ config.sat_backend = "kissat"
 # Encoding that will store all of your constraints
 E = Encoding()
 
+if len(sys.argv) <= 1:
+    print("USAGE: run.py [BOARD VERSION]")
+    exit(1)
+VERSION = int(sys.argv[1]) #Need argument
+GRID_SIZE = 5
+blk_dots = set()
+wht_dots = set()
+oob_dots = set()
+srr_dots = set()
+surrounded = []
+
 class Hashable:
+    """Used to compare propositions to each other."""
     def __hash__(self):
         return hash(str(self))
 
@@ -70,15 +82,17 @@ class WhiteCaptured(Hashable):
     def __repr__(self):
         return f"White Captured?"
 # 
+"""Coords are (x,y). 1 and 3 are from problem formulation."""
 black_squares = {
     1:{(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-    2:{(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)}
+    2:{(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+    3:{(1,0),(0,1),(4,1),(3,2),(2,3),(4,3),(3,4)}
     }
 white_squares = {
     1:{(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-    2:{(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)}
-                 }
-surrounded = []
+    2:{(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+    3:{(0,0), (4,0), (1,3), (3,3)}
+    }
 
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
 # for propositions within that class. For example, you can enforce that "at least one" of the propositions
@@ -94,12 +108,6 @@ surrounded = []
 
 #     def __repr__(self):
 #         return f"A.{self.data}"
-VERSION = int(sys.argv[1])
-GRID_SIZE = 5
-blk_dots = set()
-wht_dots = set()
-oob_dots = set()
-srr_dots = set()
 
 # Build an example full theory for your setting and return it.
 #
@@ -111,7 +119,8 @@ def build_theory():
     example_game(VERSION)
     for dot in blk_dots:
         i,j = dot.i,dot.j
-        E.add_constraint(~(BlackOccupied(i,j) & WhiteOccupied(i,j)))
+        #Cannot have both dots on same pos
+        E.add_constraint(~(BlackOccupied(i,j) & WhiteOccupied(i,j))) 
     for dot in oob_dots:
         i,j = dot.i, dot.j
         E.add_constraint(OutOfBounds(i,j)>>BlackOccupied(i,j))
@@ -130,7 +139,7 @@ def build_theory():
     E.add_constraint(WhiteCaptured())
     return E
 
-def is_stone(i, j):
+def is_stone(i, j) -> bool:
     if BlackOccupied(f"i{i}",f"j{j}") in blk_dots:
         return True
     if WhiteOccupied(f"i{i}",f"j{j}") in wht_dots:
@@ -138,7 +147,7 @@ def is_stone(i, j):
     return False
 
 def surrounded(i, j):
-    if out_of_bounds(i, j) or BlackOccupied(f"i{i}",f"j{j}") in blk_dots:
+    if BlackOccupied(f"i{i}",f"j{j}") in blk_dots:
         return False
     if is_stone(i+1,j) and is_stone(i,j+1) and is_stone(i-1,j) and is_stone(i,j-1):
         return True
@@ -167,23 +176,9 @@ def example_game(version):
                 else:
                     E.add_constraint(~WhiteOccupied(f"i{i}",f"j{j}"))
             
-            
-
-def example_theory():
-    # Add custom constraints by creating formulas with the variables you created. 
-    E.add_constraint((a | b) & ~x)
-    # Implication
-    E.add_constraint(y >> z)
-    # Negate a formula
-    E.add_constraint(~(x & y))
-    # You can also add more customized "fancy" constraints. Use case: you don't want to enforce "exactly one"
-    # for every instance of BasicPropositions, but you want to enforce it for a, b, and c.:
-    constraint.add_exactly_one(E, a, b, c)
-
-    return E
 
 def print_board(sol):
-    """unused"""
+    """Unused. Using print dots instead in case there is no solution."""
     for j in range(GRID_SIZE):
         out = ""
         for i in range(GRID_SIZE):
