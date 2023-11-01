@@ -196,7 +196,6 @@ def print_dots():
         print(out)
 
 if __name__ == "__main__":
-
     T = build_theory()
     # Don't compile until you're finished adding all your constraints!
     T = T.compile()
