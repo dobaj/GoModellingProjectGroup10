@@ -132,7 +132,7 @@ def is_stone(i, j) -> bool:
         return True
     return False
 
-def surrounded(i, j):
+def surrounded(i, j) -> bool:
     if BlackOccupied(f"i{i}",f"j{j}") in blk_dots:
         return False
     if is_stone(i+1,j) and is_stone(i,j+1) and is_stone(i-1,j) and is_stone(i,j-1):
@@ -146,8 +146,8 @@ def out_of_bounds(i, j) -> bool:
 
 def example_game(version):
     #Use range outside of grid to populate out of bounds propositions
-    for i in range(-2,GRID_SIZE+2):
-        for j in range(-2,GRID_SIZE+2):
+    for i in range(-1,GRID_SIZE+1):
+        for j in range(-1,GRID_SIZE+1):
             if out_of_bounds(i,j):
                 E.add_constraint(OutOfBounds(f"i{i}",f"j{j}"))
                 oob_dots.add(OutOfBounds(f"i{i}",f"j{j}"))
