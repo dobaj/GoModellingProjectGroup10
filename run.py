@@ -76,13 +76,13 @@ class Surrounded(Hashable):
 @proposition(E)
 class WhiteCaptured(Hashable):
 
-    # def __init__(self):
-    #     self
+    def __init__(self):
+        self
 
     def __repr__(self):
         return f"White Captured?"
 # 
-"""Coords are (x,y). 1 and 3 are from problem formulation."""
+"""Coords are (i,j). Boards 1 and 3 are from problem formulation."""
 black_squares = {
     1:{(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
     2:{(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
@@ -93,21 +93,6 @@ white_squares = {
     2:{(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
     3:{(0,0), (4,0), (1,3), (3,3)}
     }
-
-# Different classes for propositions are useful because this allows for more dynamic constraint creation
-# for propositions within that class. For example, you can enforce that "at least one" of the propositions
-# that are instances of this class must be true by using a @constraint decorator.
-# other options include: at most one, exactly one, at most k, and implies all.
-# For a complete module reference, see https://bauhaus.readthedocs.io/en/latest/bauhaus.html
-# @constraint.implies_all(E)
-# @proposition(E)
-# class FancyPropositions:
-
-#     def __init__(self, data):
-#         self.data = data
-
-#     def __repr__(self):
-#         return f"A.{self.data}"
 
 # Build an example full theory for your setting and return it.
 #
@@ -127,6 +112,7 @@ def build_theory():
         blk_dots.add(BlackOccupied(i,j)) #All oob_dots are considered black dots
     for i in range(GRID_SIZE):
         for j in range(GRID_SIZE):
+            #If there is a white dot in this pos
             if WhiteOccupied(f"i{i}",f"j{j}") in wht_dots:
                 if surrounded(i,j):
                     E.add_constraint(Surrounded(f"i{i}",f"j{j}"))
@@ -159,13 +145,14 @@ def out_of_bounds(i, j) -> bool:
     return False
 
 def example_game(version):
+    #Use range outside of grid to populate out of bounds propositions
     for i in range(-2,GRID_SIZE+2):
         for j in range(-2,GRID_SIZE+2):
             if out_of_bounds(i,j):
                 E.add_constraint(OutOfBounds(f"i{i}",f"j{j}"))
                 oob_dots.add(OutOfBounds(f"i{i}",f"j{j}"))
             else:
-                if (i,j) in black_squares[version] or out_of_bounds(i,j):
+                if (i,j) in black_squares[version]:
                     E.add_constraint(BlackOccupied(f"i{i}",f"j{j}"))
                     blk_dots.add(BlackOccupied(f"i{i}",f"j{j}"))
                 else:
@@ -178,7 +165,9 @@ def example_game(version):
             
 
 def print_board(sol):
-    """Unused. Using print dots instead in case there is no solution."""
+    """Unused. Using print dots instead in case there is no solution.
+    Keeping this in case we change to a multiple solution model.
+    """
     for j in range(GRID_SIZE):
         out = ""
         for i in range(GRID_SIZE):
@@ -224,7 +213,6 @@ if __name__ == "__main__":
     #     print(" %s: %.2f" % (vn, likelihood(T, v)))
     # print()
     
-    #print(sol)
     if sol == None:
         print("White is not captured")
         print_dots()
