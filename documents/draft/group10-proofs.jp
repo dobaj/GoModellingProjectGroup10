@@ -1,0 +1,165 @@
+﻿CONJECTUREPANEL GROUP10
+PROOF "∃x.∃y.P(x,y), ∀i.∀j.(P(i,j)→B(i,j)) ⊢ ∃x.∃y.B(x,y)"
+INFER ∃x.∃y.P(x,y),
+     ∀i.∀j.(P(i,j)→B(i,j))
+     ⊢ ∃x.∃y.B(x,y)
+FORMULAE
+0 actual i1,
+1 ∃y.B(i1,y),
+2 ∃y.B(x,y),
+3 i1,
+4 x,
+5 actual i2,
+6 B(i1,i2),
+7 B(i1,y),
+8 i2,
+9 y,
+10 ∃x.∃y.B(x,y),
+11 P(i1,i2),
+12 P(i1,i2)→B(i1,i2),
+13 ∀j.(P(i1,j)→B(i1,j)),
+14 P(i1,j)→B(i1,j),
+15 j,
+16 ∃y.P(i1,y),
+17 P(i1,y),
+18 ∀i.∀j.(P(i,j)→B(i,j)),
+19 ∀j.(P(i,j)→B(i,j)),
+20 i,
+21 ∀j.(P(i1,j)→B(i1,j)),
+22 ∃x.∃y.P(x,y),
+23 ∃y.P(x,y)
+IS
+SEQ ("∃ elim"[i,C,P,x\3,10,23,4]) (hyp[A\22]) (cut[B,C\21,10]) ("∀ elim"[P,i,x\19,3,20]) (hyp[A\18]) (hyp[A\0]) ("∃ elim"[i,C,P,x\8,10,17,9]) (hyp[A\16]) (cut[B,C\12,10]) ("∀ elim"[P,i,x\14,8,15]) (hyp[A\13]) (hyp[A\5]) (cut[B,C\6,10]) ("→ elim"[A,B\11,6]) (hyp[A\12]) (hyp[A\11]) (cut[B,C\6,10]) (hyp[A\6]) (cut[B,C\1,10]) ("∃ intro"[P,i,x\7,8,9]) (hyp[A\6]) (hyp[A\5]) ("∃ intro"[P,i,x\2,3,4]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "¬¬P ⊢ P"
+INFER ¬¬P 
+     ⊢ P 
+FORMULAE
+0 ⊥,
+1 ¬¬P,
+2 ¬P,
+3 P 
+IS
+SEQ ("contra (classical)"[A\3]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL GROUP10
+PROOF "∀x.∀y.P(x,y), ∀i.∀j.(¬(P(i,j)∧B(i,j))) ⊢ ¬∃x.∃y.B(x,y)"
+INFER ∀x.∀y.P(x,y),
+     ∀i.∀j.(¬(P(i,j)∧B(i,j)))
+     ⊢ ¬∃x.∃y.B(x,y)
+FORMULAE
+0 ⊥,
+1 ¬(P(i1,i2)∧B(i1,i2)),
+2 P(i1,i2)∧B(i1,i2),
+3 B(i1,i2),
+4 P(i1,i2),
+5 actual i2,
+6 ∀j.¬(P(i1,j)∧B(i1,j)),
+7 ¬(P(i1,j)∧B(i1,j)),
+8 i2,
+9 j,
+10 ¬(P(i1,i2)∧B(i1,i2)),
+11 ∀y.P(i1,y),
+12 P(i1,y),
+13 y,
+14 ∃y.B(i1,y),
+15 B(i1,y),
+16 actual i1,
+17 ∀i.∀j.(¬(P(i,j)∧B(i,j))),
+18 ∀j.(¬(P(i,j)∧B(i,j))),
+19 i1,
+20 i,
+21 ∀j.(¬(P(i1,j)∧B(i1,j))),
+22 ∀x.∀y.P(x,y),
+23 ∀y.P(x,y),
+24 x,
+25 ∃x.∃y.B(x,y),
+26 ∃y.B(x,y)
+IS
+SEQ ("¬ intro"[A\25]) ("∃ elim"[i,C,P,x\19,0,26,24]) (hyp[A\25]) (cut[B,C\11,0]) ("∀ elim"[P,i,x\23,19,24]) (hyp[A\22]) (hyp[A\16]) (cut[B,C\21,0]) ("∀ elim"[P,i,x\18,19,20]) (hyp[A\17]) (hyp[A\16]) ("∃ elim"[i,C,P,x\8,0,15,13]) (hyp[A\14]) (cut[B,C\4,0]) ("∀ elim"[P,i,x\12,8,13]) (hyp[A\11]) (hyp[A\5]) (cut[B,C\10,0]) ("∀ elim"[P,i,x\7,8,9]) (hyp[A\6]) (hyp[A\5]) (cut[B,C\2,0]) ("∧ intro"[A,B\4,3]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "P→Q ⊢ ¬Q→¬P"
+INFER P→Q 
+     ⊢ ¬Q→¬P 
+FORMULAE
+0 ⊥,
+1 ¬Q,
+2 Q,
+3 P,
+4 P→Q,
+5 ¬P 
+IS
+SEQ ("→ intro"[A,B\1,5]) ("¬ intro"[A\3]) (cut[B,C\2,0]) ("→ elim"[A,B\3,2]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "P→Q, ¬Q ⊢ ¬P"
+INFER P→Q,
+     ¬Q 
+     ⊢ ¬P 
+FORMULAE
+0 ⊥,
+1 ¬Q,
+2 Q,
+3 P,
+4 P→Q 
+IS
+SEQ ("¬ intro"[A\3]) (cut[B,C\2,0]) ("→ elim"[A,B\3,2]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "P∨¬P"
+INFER P∨¬P 
+FORMULAE
+0 ⊥,
+1 ¬(P∨¬P),
+2 P∨¬P,
+3 P,
+4 ¬P,
+5 ¬(P∨¬P)
+IS
+SEQ ("contra (classical)"[A\2]) (cut[B,C\3,0]) ("contra (classical)"[A\3]) (cut[B,C\2,0]) (LAYOUT "∨ intro" (0) ("∨ intro(R)"[B,A\3,4]) (hyp[A\4])) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0]) (cut[B,C\2,0]) (LAYOUT "∨ intro" (0) ("∨ intro(L)"[B,A\4,3]) (hyp[A\3])) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "P ⊢ ¬¬P"
+INFER P 
+     ⊢ ¬¬P 
+FORMULAE
+0 ⊥,
+1 ¬P,
+2 P 
+IS
+SEQ ("¬ intro"[A\1]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL GROUP10
+CURRENTPROOF "P(1,1), B(2,1), B(0,1), B(1,2), B(1,0), P(1,1)∧(P(2,1)∨B(2,1))∧(P(0,1)∨B(0,1))∧(P(1,2)∨B(1,2))∧(P(1,0)∨B(1,0))→S(1,1) ⊢ S(1,1)"
+INFER P(1,1),
+     B(2,1),
+     B(0,1),
+     B(1,2),
+     B(1,0),
+     P(1,1)∧(P(2,1)∨B(2,1))∧(P(0,1)∨B(0,1))∧(P(1,2)∨B(1,2))∧(P(1,0)∨B(1,0))→S(1,1)
+     ⊢ S(1,1)
+FORMULAE
+0 (P(2,1)∨B(2,1))∧(P(0,1)∨B(0,1))∧((P(1,2)∨B(1,2))∧(P(1,0)∨B(1,0))),
+1 P(1,1),
+2 P(1,1)∧((P(2,1)∨B(2,1))∧(P(0,1)∨B(0,1))∧((P(1,2)∨B(1,2))∧(P(1,0)∨B(1,0)))),
+3 S(1,1),
+4 (P(1,2)∨B(1,2))∧(P(1,0)∨B(1,0)),
+5 (P(2,1)∨B(2,1))∧(P(0,1)∨B(0,1)),
+6 P(0,1)∨B(0,1),
+7 P(2,1)∨B(2,1),
+8 B(2,1),
+9 P(2,1),
+10 B(0,1),
+11 P(0,1),
+12 P(1,0)∨B(1,0),
+13 P(1,2)∨B(1,2),
+14 B(1,2),
+15 P(1,2),
+16 B(1,0),
+17 P(1,0),
+18 P(1,1)∧(P(2,1)∨B(2,1))∧(P(0,1)∨B(0,1))∧(P(1,2)∨B(1,2))∧(P(1,0)∨B(1,0))→S(1,1)
+IS
+SEQ (cut[B,C\12,3]) (LAYOUT "∨ intro" (0) ("∨ intro(R)"[B,A\17,16]) (hyp[A\16])) (cut[B,C\13,3]) (LAYOUT "∨ intro" (0) ("∨ intro(R)"[B,A\15,14]) (hyp[A\14])) (cut[B,C\4,3]) ("∧ intro"[A,B\13,12]) (hyp[A\13]) (hyp[A\12]) (cut[B,C\6,3]) (LAYOUT "∨ intro" (0) ("∨ intro(R)"[B,A\11,10]) (hyp[A\10])) (cut[B,C\7,3]) (LAYOUT "∨ intro" (0) ("∨ intro(R)"[B,A\9,8]) (hyp[A\8])) (cut[B,C\5,3]) ("∧ intro"[A,B\7,6]) (hyp[A\7]) (hyp[A\6]) (cut[B,C\0,3]) ("∧ intro"[A,B\5,4]) (hyp[A\5]) (hyp[A\4]) (cut[B,C\2,3]) ("∧ intro"[A,B\1,0]) (hyp[A\1]) (hyp[A\0]) (NEXTGOAL)
+END

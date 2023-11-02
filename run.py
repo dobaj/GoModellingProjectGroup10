@@ -11,7 +11,7 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 if len(sys.argv) <= 1:
-    print("USAGE: run.py [MODE: RUN | TEST] (BOARD VERSION)")
+    print("USAGE: run.py [BOARD VERSION]")
     exit(1)
 MODE = sys.argv[1].lower()
 
@@ -36,7 +36,6 @@ class Hashable:
 
 # 
 """Coords are (i,j). Boards 1 and 3 are from problem formulation."""
-
 
 def print_board(sol):
     """Unused. Using print dots instead in case there is no solution.
@@ -377,4 +376,9 @@ if __name__ == "__main__":
         print("\n"*2)
 
     
-
+    if sol == None:
+        print("White is not captured")
+        print_dots()
+    else:
+        print("White is captured.")
+        print_dots()
