@@ -215,9 +215,9 @@ class Test:
 
         if satisfiable == self.captured:
             # we solved this test case
-            print(f"✅ [{self.description}] cptable: {satisfiable}")
+            print(f"✅ [{self.description}] Result: {satisfiable}")
         else:
-            print(f"❌ [{self.description}] answer: {self.captured} cptable: {satisfiable}")
+            print(f"❌ [{self.description}] Answer: {self.captured} Result: {satisfiable}")
 
         return T
         
