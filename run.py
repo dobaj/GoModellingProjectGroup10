@@ -130,11 +130,13 @@ class Test:
                         self.E.add_constraint(~WhiteOccupied(f"i{i}",f"j{j}"))    
 
         def add_constraints():
-            # adds all constraints to global E
+
             for dot in self.blk_dots:
                 i,j = dot.i,dot.j
                 #Cannot have both dots on same pos
                 self.E.add_constraint(~(BlackOccupied(i,j) & WhiteOccupied(i,j))) 
+                # self.E.add_constraint((~BlackOccupied(i,j) | ~WhiteOccupied(i,j))) 
+                # self.E.add_constraint(WhiteOccupied(i,j))
             for dot in self.oob_dots:
                 i,j = dot.i, dot.j
                 self.E.add_constraint(OutOfBounds(i,j)>>BlackOccupied(i,j))
@@ -316,6 +318,30 @@ tests = [
 		False,
 	), 
     
+    Test(
+		'overlapping stones, not capturable',
+		{
+			"white": {(2,2)},
+			"black": {(2,2)},
+		},
+		False,
+	),
+    Test(
+		'overlapping stones',
+		{
+			"white": {(1,2)},
+			"black": {(1,3),(0,2),(2,2),(1,1),(1,2)},
+		},
+		False,
+	),
+	Test(
+		'overlapping stones, complicated case, no liberties',
+		{
+			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+			"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (1,3), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+		},
+		False,
+	),   
 
 ]
 
@@ -337,28 +363,7 @@ tests = [
     
 
 
-def run_tests():
-    """
-    Run a list of board configurations and what they should evaluate to. Prints to console.
-    """
 
-    
-    for test in tests:
-        test.run(show_board=True)
-
-    # for test in reversed(tests):
-    #     test.run()
-
-
-
-    # for test in tests:
-    #     T = test.run()
-
-
-    # tests.reverse()
-    
-    # for test in tests:
-    #     T = test.run()
 
 
 if __name__ == "__main__":
@@ -371,14 +376,13 @@ if __name__ == "__main__":
        
 
     elif MODE == 'test':
-        print("\n"*2)
-        run_tests()
-        print("\n"*2)
+        for test in tests:
+            test.run(show_board=False)
 
     
-    if sol == None:
-        print("White is not captured")
-        print_dots()
-    else:
-        print("White is captured.")
-        print_dots()
+    # if sol == None:
+    #     print("White is not captured")
+    #     print_dots()
+    # else:
+    #     print("White is captured.")
+    #     print_dots()
