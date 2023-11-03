@@ -163,6 +163,7 @@ class Test:
                         self.E.add_constraint(~WhiteOccupied(f"i{i}",f"j{j}"))    
 
         def add_constraints():
+            # return
             # adds all constraints to global E
             for dot in self.blk_dots:
                 i,j = dot.i,dot.j
@@ -215,9 +216,9 @@ class Test:
 
         if satisfiable == self.captured:
             # we solved this test case
-            print(f"✅ [{self.description}] Result: {satisfiable}")
+            print(f"✅ Capturable: {str(satisfiable):<5}\t\t\t[{self.description}] ")
         else:
-            print(f"❌ [{self.description}] Answer: {self.captured} Result: {satisfiable}")
+            print(f"❌ Capturable: {str(satisfiable):<5}\tAnswer: {self.captured}\t[{self.description}]  ")
 
         return T
         
