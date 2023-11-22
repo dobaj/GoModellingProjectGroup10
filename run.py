@@ -46,11 +46,11 @@ class Hashable:
 #     for j in range(GRID_SIZE):
 #         out = ""
 #         for i in range(GRID_SIZE):
-#             if sol[BlackOccupied(f"i{i}",f"j{j}")]:
+#             if sol[BlackOccupied(i, j)]:
 #                 out+="⚫"
 #             elif sol[Surrounded(f"i{i}", f"j{j}")]:
 #                 out+="🚫"
-#             elif sol[WhiteOccupied(f"i{i}",f"j{j}")]:
+#             elif sol[WhiteOccupied(i, j)]:
 #                 out+="⚪"
 #             else:
 #                 out+="🟫"
@@ -60,7 +60,7 @@ class Test:
 	def __init__(self, description: str, board: dict, captured: bool) -> None:
 		self.description = description
 		self.board = board
-		self.captured = captured # our answer 
+		self.answer = captured # our answer 
 
 
 
@@ -83,7 +83,7 @@ class Test:
 				self.j = j
 
 			def __repr__(self):
-				return f"({self.i} {self.j} W)"
+				return f"(i{self.i} j{self.j} W)"
 			
 		@proposition(self.E)
 		class BlackOccupied(Hashable):
@@ -93,7 +93,7 @@ class Test:
 				self.j = j
 
 			def __repr__(self):
-				return f"({self.i} {self.j} B)"
+				return f"(i{self.i} j{self.j} B)"
 
 		@proposition(self.E)
 		class OutOfBounds(Hashable):
@@ -103,7 +103,7 @@ class Test:
 				self.j = j
 
 			def __repr__(self):
-				return f"({self.i} {self.j} O)"
+				return f"(i{self.i} j{self.j} O)"
 
 		@proposition(self.E)
 		class Safe(Hashable):
@@ -113,7 +113,7 @@ class Test:
 				self.j = j
 
 			def __repr__(self):
-				return f"({self.i} {self.j} S)"
+				return f"(i{self.i} j{self.j} S)"
 			
 		@proposition(self.E)
 		class Captured(Hashable):
@@ -123,20 +123,20 @@ class Test:
 				self.j = j
 
 			def __repr__(self):
-				return f"({self.i} {self.j} C)"
+				return f"(i{self.i} j{self.j} C)"
 			
 		def is_stone(i, j) -> bool:
-			if BlackOccupied(f"i{i}",f"j{j}") in self.blk_stones:
+			if BlackOccupied(i,j) in self.blk_stones:
 				return True
-			if WhiteOccupied(f"i{i}",f"j{j}") in self.wht_stones:
+			if WhiteOccupied(i,j) in self.wht_stones:
 				return True
 			return False
 
 		def safe(i, j) -> bool:
 			for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
-				if WhiteOccupied(f"i{i+di}",f"j{j+dj}") in self.wht_stones and Safe(f"i{i+di}",f"j{j+dj}") not in self.safe_stones:
-					self.E.add_constraint(Safe(f"i{i+di}",f"j{j+dj}"))
-					self.safe_stones.add(Safe(f"i{i+di}",f"j{j+dj}"))
+				if WhiteOccupied(i+di,j+dj) in self.wht_stones and Safe(i+di,j+dj) not in self.safe_stones:
+					self.E.add_constraint(Safe(i+di,j+dj))
+					self.safe_stones.add(Safe(i+di,j+dj))
 					safe(i+di,j+dj)
 
 		def out_of_bounds(i, j) -> bool:
@@ -150,22 +150,21 @@ class Test:
 			for i in range(-1,GRID_SIZE+1):
 				for j in range(-1,GRID_SIZE+1):
 					if out_of_bounds(i,j):
-						self.E.add_constraint(OutOfBounds(f"i{i}",f"j{j}"))
-						self.oob_stones.add(OutOfBounds(f"i{i}",f"j{j}"))
+						self.E.add_constraint(OutOfBounds(i,j))
+						self.oob_stones.add(OutOfBounds(i,j))
 						continue
 					
 					if (i,j) in black_stones:
-						self.E.add_constraint(BlackOccupied(f"i{i}",f"j{j}"))
-						self.blk_stones.add(BlackOccupied(f"i{i}",f"j{j}"))
+						self.E.add_constraint(BlackOccupied(i, j))
+						self.blk_stones.add(BlackOccupied(i, j))
 					else:
-						self.E.add_constraint(~BlackOccupied(f"i{i}",f"j{j}"))
-
+						self.E.add_constraint(~BlackOccupied(i, j))
 
 					if (i,j) in white_stones:
-						self.E.add_constraint(WhiteOccupied(f"i{i}",f"j{j}"))
-						self.wht_stones.add(WhiteOccupied(f"i{i}",f"j{j}"))
+						self.E.add_constraint(WhiteOccupied(i, j))
+						self.wht_stones.add(WhiteOccupied(i, j))
 					else:
-						self.E.add_constraint(~WhiteOccupied(f"i{i}",f"j{j}"))    
+						self.E.add_constraint(~WhiteOccupied(i, j))    
 
 		def add_constraints():
 			# return
@@ -173,34 +172,34 @@ class Test:
 			for dot in self.blk_stones:
 				i,j = dot.i,dot.j
 				#Cannot have both dots on same pos
-				self.E.add_constraint(~(BlackOccupied(f"i{i}",f"j{j}") & WhiteOccupied(f"i{i}",f"j{j}"))) 
+				self.E.add_constraint( ~(BlackOccupied(i, j) & WhiteOccupied(i, j)) ) 
 			for dot in self.oob_stones:
 				i,j = dot.i, dot.j
-				self.E.add_constraint(OutOfBounds(i,j)>>BlackOccupied(i,j))
-				self.blk_stones.add(BlackOccupied(i,j)) #All oob_dots are considered black dots
+				self.E.add_constraint(OutOfBounds(i, j)>>BlackOccupied(i, j))
+				self.blk_stones.add(BlackOccupied(i, j)) #All oob_dots are considered black dots
 			for i in range(GRID_SIZE):
 				for j in range(GRID_SIZE):
 					#If there is a white dot in this pos
-					if WhiteOccupied(f"i{i}",f"j{j}") not in self.wht_stones and BlackOccupied(f"i{i}",f"j{j}") not in self.blk_stones:
+					if WhiteOccupied(i, j) not in self.wht_stones and BlackOccupied(i, j) not in self.blk_stones:
 						safe(i,j)
 					# else:
-					# 	self.E.add_constraint(~Safe(f"i{i}",f"j{j}"))
+					# 	self.E.add_constraint(~Safe(i, j))
 			for i in range(GRID_SIZE):
 				for j in range(GRID_SIZE):
-					if WhiteOccupied(f"i{i}",f"j{j}")  in self.wht_stones and Safe(f"i{i}",f"j{j}"):
-						self.E.add_constraint(Captured(f"i{i}",f"j{j}"))
-						self.cap_stones.add(Captured(f"i{i}",f"j{j}"))
+					if WhiteOccupied(i, j)  in self.wht_stones and Safe(i, j) not in self.safe_stones:
+						self.E.add_constraint(Captured(i, j))
+						self.cap_stones.add(Captured(i, j))
 			# self.E.add_constraint(WhiteCaptured())
 		
 		def print_dots():
 			for j in range(GRID_SIZE):
 				out = ""
 				for i in range(GRID_SIZE):
-					if BlackOccupied(f"i{i}",f"j{j}") in self.blk_stones:
+					if BlackOccupied(i, j) in self.blk_stones:
 						out+="⚫"
 					elif Captured(f"i{i}", f"j{j}") in self.cap_stones:
 						out+="🚫"
-					elif WhiteOccupied(f"i{i}",f"j{j}") in self.wht_stones:
+					elif WhiteOccupied(i, j) in self.wht_stones:
 						out+="⚪"
 					else:
 						out+="🟫"
@@ -218,20 +217,16 @@ class Test:
 		satisfiable = T.satisfiable()
 		# solutions = count_solutions(T)
 
-
-		if satisfiable == True:
-			whites = 0
-			for w in self.wht_stones:
-				whites+=1
-			caps=0
-			for cap in self.cap_stones:
-				caps+=1
-			# we solved this test case
-			if caps == whites:
-				print(f"✅ Capturable: {str(satisfiable):<5}\t\t\t[{self.description}] ")
-			else:
-				print(f"❌ Capturable: {str(satisfiable):<5}\tAnswer: {self.captured}\t[{self.description}]  ")
-			print(f"Amount Captured: {caps}")
+		# if satisfiable == True:
+		whites = len(self.wht_stones)
+		caps = len(self.cap_stones)
+		answer = (caps == whites) & satisfiable
+		# we solved this test case
+		if answer == self.answer:
+			print(f"✅ Capturable: {str(answer):<5}\t\t\t[{self.description}] ")
+		else:
+			print(f"❌ Capturable: {str(answer):<5}\tAnswer: {self.answer}\t[{self.description}]  ")
+		print(f"Amount Captured: {caps}")
 
 		return satisfiable
 	
@@ -244,7 +239,10 @@ class Test:
 
 				if (i,j) in self.board["white"]:
 					continue
-
+				
+				self.run()
+				for cap in self.cap_stones:
+					self.board["white"].remove((int(cap.i[1:]),int(cap.j[1:])))
 				# we can safely test and add a black to the square
 				self.board["black"].add((i,j))
 
@@ -396,6 +394,7 @@ if __name__ == "__main__":
 	#     run_tests()
 	#     print()
 	run_tests()
+	
 	print()
 	
 	t = Test(
@@ -406,7 +405,7 @@ if __name__ == "__main__":
 		},
 		False,
 	)
-	
+	t.run(show_board=SHOWBOARD)
 	# t = Test(
 	# 	'single white stone surrounded by 3 black',
 	# 	{
@@ -415,5 +414,6 @@ if __name__ == "__main__":
 	# 	},
 	# 	False,
 	# )
+	# t.next_move()
 
 	
