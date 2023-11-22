@@ -1,0 +1,2 @@
+Look ahead one move (best move for black, can look ahead to whites move too for snapback)
+Need to check each turn (including beginning) individual captures for each side (flip board)
