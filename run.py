@@ -173,10 +173,6 @@ class Test:
 				i,j = dot.i,dot.j
 				#Cannot have both dots on same pos
 				self.E.add_constraint( ~(BlackOccupied(i, j) & WhiteOccupied(i, j)) ) 
-			for dot in self.oob_stones:
-				i,j = dot.i, dot.j
-				self.E.add_constraint(OutOfBounds(i, j)>>BlackOccupied(i, j))
-				self.blk_stones.add(BlackOccupied(i, j)) #All oob_dots are considered black dots
 			for i in range(GRID_SIZE):
 				for j in range(GRID_SIZE):
 					#If there is a white dot in this pos
@@ -263,11 +259,11 @@ class Test:
 				#Remove already captured stones
 				self.run()
 				for cap in self.cap_stones:
-					self.board["white"].remove(cap.i,cap.j)
+					self.board["white"].remove((cap.i,cap.j))
 				self.swap_boards()
 				self.run()
 				for cap in self.cap_stones:
-					self.board["white"].remove(cap.i,cap.j)
+					self.board["white"].remove((cap.i,cap.j))
 				self.swap_boards()
 				# we can safely test and add a black to the square
 				black = set(self.board["black"])
@@ -277,8 +273,11 @@ class Test:
 				satisfiable = self.run(show_board=False)
 				score = len(self.cap_stones)
 				score -= self.next_white_move()
+				#Reset board positions for next iteration
 				self.board["black"] = black
-
+				self.board["white"] = white
+				#If best move so far then set max
+				print(score, (i,j))
 				max_score = max(max_score,score)
 				if max_score == score:
 					black_stone_pos = (i,j)
@@ -298,11 +297,11 @@ class Test:
 				#Remove already captured stones
 				self.run()
 				for cap in self.cap_stones:
-					self.board["white"].remove(cap.i,cap.j)
+					self.board["white"].remove((cap.i,cap.j))
 				self.swap_boards()
 				self.run()
 				for cap in self.cap_stones:
-					self.board["white"].remove(cap.i,cap.j)
+					self.board["white"].remove((cap.i,cap.j))
 				self.swap_boards()
 
 				# we can safely test and add a black to the square
@@ -311,7 +310,6 @@ class Test:
 				# print(f"testing at {i,j}")
 				satisfiable = self.run(show_board=False)
 				max_score = max(len(self.cap_stones), max_score)
-
 				self.board["black"].remove((i,j))
 
 		return max_score
@@ -453,19 +451,19 @@ if __name__ == "__main__":
 	#     print()
 	#     run_tests()
 	#     print()
-	run_tests()
+	# run_tests()
 	
 	print()
 	
 	t = Test(
-		'complicated case, 2 liberties',
+		'single white stone surrounded by 3 black one white',
 		{
-			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-			"black": {(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+			"white": {(1,2)},
+			"black": {(1,3),(2,2),(1,1)},
 		},
 		False,
 	)
-	t.run(show_board=SHOWBOARD)
+	print(t.next_black_move())
 	# t = Test(
 	# 	'single white stone surrounded by 3 black',
 	# 	{
