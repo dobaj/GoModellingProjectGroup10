@@ -96,16 +96,6 @@ class Test:
 				return f"(i{self.i} j{self.j} B)"
 
 		@proposition(self.E)
-		class OutOfBounds(Hashable):
-
-			def __init__(self, i, j):
-				self.i = i
-				self.j = j
-
-			def __repr__(self):
-				return f"(i{self.i} j{self.j} O)"
-
-		@proposition(self.E)
 		class Safe(Hashable):
 
 			def __init__(self, i, j):
@@ -139,21 +129,11 @@ class Test:
 					self.safe_stones.add(Safe(i+di,j+dj))
 					safe(i+di,j+dj)
 
-		def out_of_bounds(i, j) -> bool:
-			if (i < 0 or j < 0 or i >= GRID_SIZE or j >= GRID_SIZE):
-				return True
-			return False
-
 		def add_from_board(board: dict):
 			black_stones = board["black"]
 			white_stones = board["white"]
 			for i in range(-1,GRID_SIZE+1):
 				for j in range(-1,GRID_SIZE+1):
-					if out_of_bounds(i,j):
-						self.E.add_constraint(OutOfBounds(i,j))
-						self.oob_stones.add(OutOfBounds(i,j))
-						continue
-					
 					if (i,j) in black_stones:
 						self.E.add_constraint(BlackOccupied(i, j))
 						self.blk_stones.add(BlackOccupied(i, j))
@@ -171,21 +151,20 @@ class Test:
 			# adds all constraints to global E
 			for dot in self.blk_stones:
 				i,j = dot.i,dot.j
-				#Cannot have both dots on same pos
-				self.E.add_constraint( ~(BlackOccupied(i, j) & WhiteOccupied(i, j)) ) 
+				#Cannot have both dots on same pos, cant have a safe dot be captured
+				self.E.add_constraint(~(BlackOccupied(i, j) & WhiteOccupied(i, j)) )
+				self.E.add_constraint(~(Safe(i, j) & Captured(i, j))) 
 			for i in range(GRID_SIZE):
 				for j in range(GRID_SIZE):
-					#If there is a white dot in this pos
-					if WhiteOccupied(i, j) not in self.wht_stones and BlackOccupied(i, j) not in self.blk_stones:
+					#If there is a liberty here
+					if not is_stone(i,j):
 						safe(i,j)
-					# else:
-					# 	self.E.add_constraint(~Safe(i, j))
 			for i in range(GRID_SIZE):
 				for j in range(GRID_SIZE):
-					if WhiteOccupied(i, j)  in self.wht_stones and Safe(i, j) not in self.safe_stones:
+					#If a white stone is not safe then it is captured
+					if WhiteOccupied(i, j) in self.wht_stones and Safe(i, j) not in self.safe_stones:
 						self.E.add_constraint(Captured(i, j))
 						self.cap_stones.add(Captured(i, j))
-			# self.E.add_constraint(WhiteCaptured())
 		
 		def print_answer():
 			for j in range(GRID_SIZE):
@@ -245,10 +224,11 @@ class Test:
 	
 	def next_black_move(self) -> bool:
 		self.print_dots()
-		max_score = 0
-		black_stone_pos = (0,0)
+		max_score = -1
+		black_stone_pos = (-1,-1)
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
+				satisfiable = True
 				if (i,j) in self.board["black"]:
 					continue
 
@@ -267,21 +247,30 @@ class Test:
 				# we can  add a black stone to the square
 				black = set(self.board["black"])
 				white = set(self.board["white"])
+
 				self.board["black"].add((i,j))
+				#See if the move is illegal
+				self.swap_boards()
+				self.run()
+				for cap in self.cap_stones:
+					if (cap.i,cap.j) == (i,j):
+						satisfiable = False
+				self.swap_boards()
 				# print(f"testing black stone at {i,j}")
 				print("#",end="",flush=True)
 
-				satisfiable = self.run(show_board=False)
-				score = len(self.cap_stones)
-				score -= self.next_white_move()
-				#Reset board positions for next iteration
-				self.board["black"] = black
-				self.board["white"] = white
-				#If best move so far then set max
-				# print(score, (i,j))
-				max_score = max(max_score,score)
-				if max_score == score:
-					black_stone_pos = (i,j)
+				satisfiable &= self.run(show_board=False)
+				if satisfiable:
+					score = len(self.cap_stones)
+					score -= self.next_white_move()
+					#Reset board positions for next iteration
+					self.board["black"] = black
+					self.board["white"] = white
+					#If best move so far then set max
+					# print(score, (i,j))
+					max_score = max(max_score,score)
+					if max_score == score:
+						black_stone_pos = (i,j)
 		print()
 		return max_score, black_stone_pos
 
@@ -290,6 +279,7 @@ class Test:
 		self.swap_boards()
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
+				satisfiable = True
 				if (i,j) in self.board["black"]:
 					continue
 
@@ -308,12 +298,19 @@ class Test:
 
 				# we can safely test and add a black to the square
 				self.board["black"].add((i,j))
+				#See if the move is illegal
+				self.swap_boards()
+				self.run()
+				for cap in self.cap_stones:
+					if (cap.i,cap.j) == (i,j):
+						satisfiable = False
+				self.swap_boards()
 
 				# print(f"testing at {i,j}")
-				satisfiable = self.run(show_board=False)
-				max_score = max(len(self.cap_stones), max_score)
-				self.board["black"].remove((i,j))
-
+				satisfiable &= self.run(show_board=False)
+				if satisfiable:
+					max_score = max(len(self.cap_stones), max_score)
+					self.board["black"].remove((i,j))
 		return max_score
 
 		
@@ -466,7 +463,7 @@ if __name__ == "__main__":
 		False,
 	)
 	output= t.next_black_move()
-	print("Best move is:",output[1]," with score: ", output[0])
+	print("Best move is:",output[1]," with score:", output[0])
 
 	# t = Test(
 	# 	'single white stone surrounded by 3 black',
