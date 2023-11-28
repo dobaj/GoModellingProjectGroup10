@@ -197,7 +197,7 @@ class Test:
 				for i in range(GRID_SIZE):
 					if BlackOccupied(i, j) in self.blk_stones:
 						out+="⚫"
-					elif Captured(f"i{i}", f"j{j}") in self.cap_stones:
+					elif Captured(i, j) in self.cap_stones:
 						out+="🚫"
 					elif WhiteOccupied(i, j) in self.wht_stones:
 						out+="⚪"
@@ -218,20 +218,40 @@ class Test:
 		# solutions = count_solutions(T)
 
 		# if satisfiable == True:
-		whites = len(self.wht_stones)
-		caps = len(self.cap_stones)
-		answer = (caps == whites) & satisfiable
-		# we solved this test case
-		if answer == self.answer:
-			print(f"✅ Capturable: {str(answer):<5}\t\t\t[{self.description}] ")
-		else:
-			print(f"❌ Capturable: {str(answer):<5}\tAnswer: {self.answer}\t[{self.description}]  ")
-		print(f"Amount Captured: {caps}")
+		# whites = len(self.wht_stones)
+		# caps = len(self.cap_stones)
+		# answer = (caps == whites) & satisfiable
+		# # we solved this test case
+		# if answer == self.answer:
+		# 	print(f"✅ Capturable: {str(answer):<5}\t\t\t[{self.description}] ")
+		# else:
+		# 	print(f"❌ Capturable: {str(answer):<5}\tAnswer: {self.answer}\t[{self.description}]  ")
+		# print(f"Amount Captured: {caps}")
 
 		return satisfiable
+
+	def print_dots(self):
+			for j in range(GRID_SIZE):
+				out = ""
+				for i in range(GRID_SIZE):
+					if (i, j) in self.board["black"]:
+						out+="⚫"
+					elif (i, j) in self.board["white"]:
+						out+="⚪"
+					else:
+						out+="🟫"
+				print(out)
+
+	def swap_boards(self):
+		temp = set(self.board["black"])
+		self.board["black"] = self.board["white"]
+		self.board["white"] = temp
 	
-	
-	def next_move(self) -> bool:
+	def next_black_move(self) -> bool:
+		
+		self.print_dots()
+		max_score = 0
+		black_stone_pos = (0,0)
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
 				if (i,j) in self.board["black"]:
@@ -240,23 +260,62 @@ class Test:
 				if (i,j) in self.board["white"]:
 					continue
 				
+				#Remove already captured stones
 				self.run()
 				for cap in self.cap_stones:
-					self.board["white"].remove((int(cap.i[1:]),int(cap.j[1:])))
+					self.board["white"].remove(cap.i,cap.j)
+				self.swap_boards()
+				self.run()
+				for cap in self.cap_stones:
+					self.board["white"].remove(cap.i,cap.j)
+				self.swap_boards()
+				# we can safely test and add a black to the square
+				black = set(self.board["black"])
+				white = set(self.board["white"])
+				self.board["black"].add((i,j))
+				print(f"testing black stone at {i,j}")
+				satisfiable = self.run(show_board=False)
+				score = len(self.cap_stones)
+				score -= self.next_white_move()
+				self.board["black"] = black
+
+				max_score = max(max_score,score)
+				if max_score == score:
+					black_stone_pos = (i,j)
+		return black_stone_pos
+
+	def next_white_move(self) -> bool:
+		max_score = 0
+		self.swap_boards()
+		for i in range(GRID_SIZE):
+			for j in range(GRID_SIZE):
+				if (i,j) in self.board["black"]:
+					continue
+
+				if (i,j) in self.board["white"]:
+					continue
+				
+				#Remove already captured stones
+				self.run()
+				for cap in self.cap_stones:
+					self.board["white"].remove(cap.i,cap.j)
+				self.swap_boards()
+				self.run()
+				for cap in self.cap_stones:
+					self.board["white"].remove(cap.i,cap.j)
+				self.swap_boards()
+
 				# we can safely test and add a black to the square
 				self.board["black"].add((i,j))
 
-				print(f"testing at {i,j}")
-				satisfiable = self.run(show_board=True)
+				# print(f"testing at {i,j}")
+				satisfiable = self.run(show_board=False)
+				max_score = max(len(self.cap_stones), max_score)
 
 				self.board["black"].remove((i,j))
 
-				
-				if satisfiable:
-					return True
-				
-		return False
-		
+		return max_score
+
 		
 tests = [
 	Test(
@@ -378,7 +437,8 @@ def run_tests():
 	Run a list of board configurations and what they should evaluate to. Prints to console.
 	"""
 	for test in tests:
-		test.run(show_board=SHOWBOARD)
+		# test.run(show_board=SHOWBOARD)
+		print(test.next_black_move())
 
 
 
