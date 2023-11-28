@@ -187,7 +187,7 @@ class Test:
 						self.cap_stones.add(Captured(i, j))
 			# self.E.add_constraint(WhiteCaptured())
 		
-		def print_dots():
+		def print_answer():
 			for j in range(GRID_SIZE):
 				out = ""
 				for i in range(GRID_SIZE):
@@ -206,7 +206,7 @@ class Test:
 
 		if show_board:
 			print("\n"+"-"*50)
-			print_dots()
+			print_answer()
 
 		T = self.E.compile()
 
@@ -244,7 +244,6 @@ class Test:
 		self.board["white"] = temp
 	
 	def next_black_move(self) -> bool:
-		
 		self.print_dots()
 		max_score = 0
 		black_stone_pos = (0,0)
@@ -256,7 +255,7 @@ class Test:
 				if (i,j) in self.board["white"]:
 					continue
 				
-				#Remove already captured stones
+				#Remove already captured stones from both sides
 				self.run()
 				for cap in self.cap_stones:
 					self.board["white"].remove((cap.i,cap.j))
@@ -265,11 +264,13 @@ class Test:
 				for cap in self.cap_stones:
 					self.board["white"].remove((cap.i,cap.j))
 				self.swap_boards()
-				# we can safely test and add a black to the square
+				# we can  add a black stone to the square
 				black = set(self.board["black"])
 				white = set(self.board["white"])
 				self.board["black"].add((i,j))
-				print(f"testing black stone at {i,j}")
+				# print(f"testing black stone at {i,j}")
+				print("#",end="",flush=True)
+
 				satisfiable = self.run(show_board=False)
 				score = len(self.cap_stones)
 				score -= self.next_white_move()
@@ -277,11 +278,12 @@ class Test:
 				self.board["black"] = black
 				self.board["white"] = white
 				#If best move so far then set max
-				print(score, (i,j))
+				# print(score, (i,j))
 				max_score = max(max_score,score)
 				if max_score == score:
 					black_stone_pos = (i,j)
-		return black_stone_pos
+		print()
+		return max_score, black_stone_pos
 
 	def next_white_move(self) -> bool:
 		max_score = 0
@@ -463,7 +465,9 @@ if __name__ == "__main__":
 		},
 		False,
 	)
-	print(t.next_black_move())
+	output= t.next_black_move()
+	print("Best move is:",output[1]," with score: ", output[0])
+
 	# t = Test(
 	# 	'single white stone surrounded by 3 black',
 	# 	{
