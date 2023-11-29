@@ -138,8 +138,8 @@ class Test:
 		def add_from_board(board: dict):
 			black_stones = board["black"]
 			white_stones = board["white"]
-			for i in range(-1,GRID_SIZE+1):
-				for j in range(-1,GRID_SIZE+1):
+			for i in range(GRID_SIZE):
+				for j in range(GRID_SIZE):
 					if (i,j) in black_stones:
 						self.E.add_constraint(BlackOccupied(i, j))
 						self.blk_stones.add(BlackOccupied(i, j))
@@ -245,6 +245,17 @@ class Test:
 				return True
 		return False
 
+	def is_valid_move(self, i, j, player_set, other_set):
+		#Sees if move at i j by player is valid.
+		if f"(i{i} j{j} C)" in self.player_set:
+			for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
+				if f"(i{i} j{j} C)" in self.other_set:
+					#If this move captures enemy's piece then it is okay
+					return True
+			return False
+		else:
+			return True
+
 	def remove_captured_stones(self):
 		for cap in self.cap_white_stones:
 			self.board["white"].remove((cap.i,cap.j))
@@ -252,7 +263,7 @@ class Test:
 			self.board["black"].remove((cap.i,cap.j))
 	
 	def next_black_move(self) -> bool:
-		max_score = -1
+		max_score = None
 		black_stone_pos = [(-1,-1)]
 
 		#Remove already captured stones from both sides
@@ -274,7 +285,7 @@ class Test:
 				self.board["black"].add((i,j))
 				#Run test and see if the move is illegal
 				satisfiable = self.run(show_board=False)
-				satisfiable &= f"(i{i} j{j} C)" not in self.cap_black_stones
+				satisfiable &= self.is_valid_move(i,j,self.cap_black_stones,self.cap_white_stones)
 				
 				if satisfiable:
 					score = len(self.cap_white_stones)
@@ -282,12 +293,13 @@ class Test:
 					#Remove already captured stones after this turn
 					self.remove_captured_stones()
 					score -= self.next_white_move()
-					if score > max_score:
+					if max_score == None or score > max_score:
 						max_score = score
 						black_stone_pos = [(i,j)]
 					elif score == max_score:
 						black_stone_pos.append((i,j))
 				#Reset board positions for next iteration
+				
 				self.board["black"] = black
 				self.board["white"] = white
 		print()
@@ -304,7 +316,7 @@ class Test:
 				self.board["white"].add((i,j))
 				#Run test and see if the move is illegal
 				satisfiable = self.run(show_board=False)
-				satisfiable &= f"(i{i} j{j} C)" not in self.cap_white_stones
+				satisfiable &= self.is_valid_move(i,j,self.cap_white_stones,self.cap_black_stones)
 
 				if satisfiable:
 					max_score = max(len(self.cap_black_stones), max_score)
@@ -442,7 +454,7 @@ tests = [
 		'overlapping stones, complicated case, no liberties',
 		{
 			"white": {(1,0),(2,0),(0,0),(3,1),(3,2),(3,3),(0,1),(1,2),(2,3)},
-			"black": {(2,1),(1,1),(0,3),(0,2),(1,3)},
+			"black": {(2,1),(1,1),(0,3),(1,3)},
 		},
 		False,
 	),   
