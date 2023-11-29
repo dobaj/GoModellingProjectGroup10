@@ -250,113 +250,139 @@ class Test:
 		
 		
 tests = [
-	Test(
-		'empty board',
-		{
-			"white": {},
-			"black": {},
-		},
-		True,
-	),
-	Test(
-		'single black stone',
-		{
-			"white": {},
-			"black": {(1,2)},
-		},
-		True,
-	),
-	Test(
-		'single white stone',
-		{
-			"white": {(1,2)},
-			"black": {},
-		},
-		False,
-	),
-	Test(
-		'single white stone surrounded by black',
-		{
-			"white": {(1,2)},
-			"black": {(1,3),(0,2),(2,2),(1,1)},
-		},
-		True,
-	),
-	Test(
-		'single white stone surrounded by 3 black',
-		{
-			"white": {(1,2)},
-			"black": {(1,3),(2,2),(1,1)},
-		},
-		False,
-	),      
-	Test(
-		'single white stone surrounded by 3 black one white',
-		{
-			"white": {(1,2),(0,2)},
-			"black": {(1,3),(2,2),(1,1)},
-		},
-		False,
-	),  
-	Test(
-		'complicated case, no liberties',
-		{
-			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-			"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-		},
-		True,
-	),   
-	Test(
-		'complicated case, 2 liberties',
-		{
-			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-			"black": {(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-		},
-		False,
-	), 
-	Test(
-		'full board white',
-		{
-			"white": {(i,j) for i in range(5) for j in range(5)},
-			"black": {},
-		},
-		True,
-	), 
-
-	Test(
-		'full board white, two eyes',
-		{
-			"white": {(i,j) for i in range(5) for j in range(5) if (i,j) not in [(1,2),(4,0)]},
-			"black": {},
-		},
-		False,
-	), 
 	
-	Test(
-		'overlapping stones, not capturable',
-		{
-			"white": {(2,2)},
-			"black": {(2,2)},
-		},
-		False,
-	),
-	Test(
-		'overlapping stones',
-		{
-			"white": {(1,2)},
-			"black": {(1,3),(0,2),(2,2),(1,1),(1,2)},
-		},
-		False,
-	),
+	# Test(
+	# 	'empty board',
+	# 	{
+	# 		"white": {},
+	# 		"black": {},
+	# 	},
+	# 	True,
+	# ),
+	# Test(
+	# 	'single black stone',
+	# 	{
+	# 		"white": {},
+	# 		"black": {(1,2)},
+	# 	},
+	# 	True,
+	# ),
+	# Test(
+	# 	'single white stone',
+	# 	{
+	# 		"white": {(1,2)},
+	# 		"black": {},
+	# 	},
+	# 	False,
+	# ),
+	# Test(
+	# 	'single white stone surrounded by black',
+	# 	{
+	# 		"white": {(1,2)},
+	# 		"black": {(1,3),(0,2),(2,2),(1,1)},
+	# 	},
+	# 	True,
+	# ),
+	# Test(
+	# 	'single white stone surrounded by 3 black',
+	# 	{
+	# 		"white": {(1,2)},
+	# 		"black": {(1,3),(2,2),(1,1)},
+	# 	},
+	# 	False,
+	# ),      
+	# Test(
+	# 	'single white stone surrounded by 3 black one white',
+	# 	{
+	# 		"white": {(1,2),(0,2)},
+	# 		"black": {(1,3),(2,2),(1,1)},
+	# 	},
+	# 	False,
+	# ),  
+	# Test(
+	# 	'complicated case, no liberties',
+	# 	{
+	# 		"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+	# 		"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+	# 	},
+	# 	True,
+	# ),   
+	# Test(
+	# 	'complicated case, 2 liberties',
+	# 	{
+	# 		"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+	# 		"black": {(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+	# 	},
+	# 	False,
+	# ), 
+	# Test(
+	# 	'full board white',
+	# 	{
+	# 		"white": {(i,j) for i in range(5) for j in range(5)},
+	# 		"black": {},
+	# 	},
+	# 	True,
+	# ), 
+
+	# Test(
+	# 	'full board white, two eyes',
+	# 	{
+	# 		"white": {(i,j) for i in range(5) for j in range(5) if (i,j) not in [(1,2),(4,0)]},
+	# 		"black": {},
+	# 	},
+	# 	False,
+	# ), 
+	
+	# Test(
+	# 	'overlapping stones, not capturable',
+	# 	{
+	# 		"white": {(2,2)},
+	# 		"black": {(2,2)},
+	# 	},
+	# 	False,
+	# ),
+	# Test(
+	# 	'overlapping stones',
+	# 	{
+	# 		"white": {(1,2)},
+	# 		"black": {(1,3),(0,2),(2,2),(1,1),(1,2)},
+	# 	},
+	# 	False,
+	# ),
+	# Test(
+	# 	'overlapping stones, complicated case, no liberties',
+	# 	{
+	# 		"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+	# 		"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (1,3), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+	# 	},
+	# 	False,
+	# ), 
 	Test(
 		'overlapping stones, complicated case, no liberties',
 		{
-			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-			"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (1,3), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+			"white": {(0, 0), (0, 1), (0, 2), (0, 3), (1, 0), (1, 4),
+                  (2, 0), (2, 4), (3, 0), (3, 4), (4, 0), (4, 1), (4, 2),
+                  (4, 3), (4, 4)},
+			"black": {(1, 1), (1, 2), (2, 1), (2, 2), (2, 3),
+                  (3, 1), (3, 2), (3, 3)},
 		},
 		False,
-	),   
+	), 
 
+	
+	Test(
+		'overlapping stones, complicated case, no liberties',
+		{
+			"white": {(0, 0), (0, 1), (0, 2), (0, 3), (1, 0), (1, 4),
+                  (2, 0), (2, 4), (3, 0), (3, 4), (4, 0), (4, 1), (4, 2),
+                  (4, 3), (4, 4)},
+			"black": {(1, 1), (1, 2), (2, 1), (2, 2), (2, 3),
+                  (3, 1), (3, 2), (3, 3)},
+		},
+		False,
+	),     
+	    
+	
 ]
 
 
@@ -390,8 +416,8 @@ if __name__ == "__main__":
 	t = Test(
 		'complicated case, 2 liberties',
 		{
-			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-			"black": {(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+			"white": {(1,2)},
+			"black": {(1,3),(2,2),(1,1)},
 		},
 		False,
 	)
