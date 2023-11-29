@@ -247,9 +247,9 @@ class Test:
 
 	def is_valid_move(self, i, j, player_set, other_set):
 		#Sees if move at i j by player is valid.
-		if f"(i{i} j{j} C)" in self.player_set:
+		if f"(i{i} j{j} C)" in player_set:
 			for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
-				if f"(i{i} j{j} C)" in self.other_set:
+				if f"(i{i} j{j} C)" in other_set:
 					#If this move captures enemy's piece then it is okay
 					return True
 			return False
