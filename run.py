@@ -233,21 +233,81 @@ class Test:
 
 				if (i,j) in self.board["white"]:
 					continue
+				
+				#Remove already captured stones from both sides
+				self.run()
+				for cap in self.cap_white_stones:
+					self.board["white"].remove((cap.i,cap.j))
+				for cap in self.cap_black_stones:
+					self.board["black"].remove((cap.i,cap.j))
+				
+				# we can add a black stone to the square
+				black = set(self.board["black"])
+				white = set(self.board["white"])
 
-				# we can safely test and add a black to the square
-				self.board["black"].add((i,j))
+				if len(self.board["black"]) !=0:
+					self.board["black"].add((i,j))
+				else:
+					self.board["black"]=((i,j))
+					
 
-				print(f"testing at {i,j}")
-				satisfiable = self.run(show_board=True)
 
-				self.board["black"].remove((i,j))
+				
+				#See if the move is illegal
+				satisfiable = f"(i{i} j{j} C)" not in self.cap_black_stones
 
+				satisfiable &= self.run(show_board=False)
+				# print(f"testing black stone at {i,j}")
+				print("#",end="",flush=True)
 				
 				if satisfiable:
-					return True
+					score = len(self.cap_white_stones)
+					#Remove already captured stones
+					for cap in self.cap_white_stones:
+						self.board["white"].remove((cap.i,cap.j))
+					for cap in self.cap_black_stones:
+						self.board["black"].remove((cap.i,cap.j))
+					score -= self.next_white_move()
+					#Reset board positions for next iteration
+					self.board["black"] = black
+					self.board["white"] = white
+					#If best move so far then set max
+					# print(score, (i,j))
+					max_score = max(max_score,score)
+					if max_score == score:
+						black_stone_pos = (i,j)
+		print()
+		return max_score, black_stone_pos
+
+	def next_white_move(self) -> bool:
+		max_score = 0
+
+		if len(self.board["white"]) == 0:
+			return max_score
+			
+		for i in range(GRID_SIZE):
+			for j in range(GRID_SIZE):
+				if (i,j) in self.board["black"]:
+					continue
+
+				if (i,j) in self.board["white"]:
+					continue
 				
-		return False
-		
+				# we can safely test and add a white stone to the square
+				
+				self.board["white"].add((i,j))
+
+					
+				satisfiable = f"(i{i} j{j} C)" not in self.cap_white_stones
+
+				satisfiable &= self.run(show_board=False)
+
+				# print(f"testing at {i,j}")
+				if satisfiable:
+					max_score = max(len(self.cap_black_stones), max_score)
+				self.board["white"].remove((i,j))
+		return max_score
+
 		
 tests = [
 	
@@ -414,9 +474,9 @@ if __name__ == "__main__":
 	print()
 	
 	t = Test(
-		'complicated case, 2 liberties',
+		'single white stone surrounded by 3 black',
 		{
-			"white": {(1,2)},
+			"white": {},
 			"black": {(1,3),(2,2),(1,1)},
 		},
 		False,
@@ -424,10 +484,10 @@ if __name__ == "__main__":
 	
 	# t = Test(
 	# 	'single white stone surrounded by 3 black',
-	# 	{
-	# 		"white": {(1,2)},
-	# 		"black": {(1,3),(2,2),(1,1)},
-	# 	},
+		# {
+		# 	"white": {(1,2)},
+		# 	"black": {(1,3),(2,2),(1,1)},
+		# },
 	# 	False,
 	# )
 
