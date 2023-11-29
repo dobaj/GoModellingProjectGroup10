@@ -262,7 +262,14 @@ class Test:
 				black = set(self.board["black"])
 				white = set(self.board["white"])
 
-				self.board["black"].add((i,j))
+				if len(self.board["black"]) !=0:
+					self.board["black"].add((i,j))
+				else:
+					self.board["black"]=((i,j))
+					
+
+
+				
 				#See if the move is illegal
 				satisfiable = f"(i{i} j{j} C)" not in self.cap_black_stones
 
@@ -291,6 +298,10 @@ class Test:
 
 	def next_white_move(self) -> bool:
 		max_score = 0
+
+		if len(self.board["white"]) == 0:
+			return max_score
+			
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
 				if (i,j) in self.board["black"]:
@@ -300,8 +311,10 @@ class Test:
 					continue
 				
 				# we can safely test and add a white stone to the square
+				
 				self.board["white"].add((i,j))
-				#See if the move is illegal
+
+					
 				satisfiable = f"(i{i} j{j} C)" not in self.cap_white_stones
 
 				satisfiable &= self.run(show_board=False)
@@ -454,7 +467,7 @@ if __name__ == "__main__":
 	print()
 	
 	t = Test(
-		'single white stone surrounded by 3 black one white',
+		'single white stone surrounded by 3 black',
 		{
 			"white": {(1,2)},
 			"black": {(1,3),(2,2),(1,1)},
@@ -466,10 +479,10 @@ if __name__ == "__main__":
 
 	# t = Test(
 	# 	'single white stone surrounded by 3 black',
-	# 	{
-	# 		"white": {(1,2)},
-	# 		"black": {(1,3),(2,2),(1,1)},
-	# 	},
+		# {
+		# 	"white": {(1,2)},
+		# 	"black": {(1,3),(2,2),(1,1)},
+		# },
 	# 	False,
 	# )
 	# t.next_move()
