@@ -153,7 +153,6 @@ class Test:
 						self.E.add_constraint(~WhiteOccupied(i, j))    
 
 		def add_constraints():
-			# return
 			# adds all constraints to global E
 			for dot in self.blk_stones:
 				i,j = dot.i,dot.j
@@ -218,74 +217,79 @@ class Test:
 		return satisfiable
 
 	def print_dots(self):
-			self.run()
-			for j in range(GRID_SIZE):
-				out = ""
-				for i in range(GRID_SIZE):
-					if  f"(i{i} j{j} C)" in self.cap_black_stones:
-						out+="🌑"
-					elif f"(i{i} j{j} B)" in self.blk_stones:
-						out+="⚫"
-					elif f"(i{i} j{j} C)" in self.cap_white_stones:
-						out+="🚫"
-					elif f"(i{i} j{j} W)" in self.wht_stones:
-						out+="⚪"
-					else:
-						out+="🟫"
-				print(out)
+		# Needs to have the board populated
+		for j in range(GRID_SIZE):
+			out = ""
+			for i in range(GRID_SIZE):
+				if  f"(i{i} j{j} C)" in self.cap_black_stones:
+					out+="🌑"
+				elif f"(i{i} j{j} B)" in self.blk_stones:
+					out+="⚫"
+				elif f"(i{i} j{j} C)" in self.cap_white_stones:
+					out+="🚫"
+				elif f"(i{i} j{j} W)" in self.wht_stones:
+					out+="⚪"
+				else:
+					out+="🟫"
+			print(out)
 
-	def swap_boards(self):
-		temp = set(self.board["black"])
-		self.board["black"] = self.board["white"]
-		self.board["white"] = temp
+	def should_check(self, i, j):
+		if (i,j) in self.board["black"] or (i,j) in self.board["white"]:
+			return False
+		
+		# return True
+	
+		#Tentative
+		for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
+			if (i+di,j+dj) in self.board["black"] or (i+di,j+dj) in self.board["white"]:
+				return True
+		return False
+
+	def remove_captured_stones(self):
+		for cap in self.cap_white_stones:
+			self.board["white"].remove((cap.i,cap.j))
+		for cap in self.cap_black_stones:
+			self.board["black"].remove((cap.i,cap.j))
 	
 	def next_black_move(self) -> bool:
-		self.print_dots()
 		max_score = -1
-		black_stone_pos = (-1,-1)
+		black_stone_pos = [(-1,-1)]
+
+		#Remove already captured stones from both sides
+		self.run()
+		self.print_dots()
+		
+		self.remove_captured_stones()
+
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
-				if (i,j) in self.board["black"]:
+				print("--",end="",flush=True)
+				if not self.should_check(i,j) and max_score > 0:
 					continue
-
-				if (i,j) in self.board["white"]:
-					continue
-				
-				#Remove already captured stones from both sides
-				self.run()
-				for cap in self.cap_white_stones:
-					self.board["white"].remove((cap.i,cap.j))
-				for cap in self.cap_black_stones:
-					self.board["black"].remove((cap.i,cap.j))
 				
 				# we can add a black stone to the square
 				black = set(self.board["black"])
 				white = set(self.board["white"])
 
 				self.board["black"].add((i,j))
-				#See if the move is illegal
-				satisfiable = f"(i{i} j{j} C)" not in self.cap_black_stones
-
-				satisfiable &= self.run(show_board=False)
-				# print(f"testing black stone at {i,j}")
-				print("#",end="",flush=True)
+				#Run test and see if the move is illegal
+				satisfiable = self.run(show_board=False)
+				satisfiable &= f"(i{i} j{j} C)" not in self.cap_black_stones
 				
 				if satisfiable:
 					score = len(self.cap_white_stones)
-					#Remove already captured stones
-					for cap in self.cap_white_stones:
-						self.board["white"].remove((cap.i,cap.j))
-					for cap in self.cap_black_stones:
-						self.board["black"].remove((cap.i,cap.j))
+
+					#Remove already captured stones after this turn
+					self.remove_captured_stones()
 					score -= self.next_white_move()
-					#Reset board positions for next iteration
-					self.board["black"] = black
-					self.board["white"] = white
-					#If best move so far then set max
-					# print(score, (i,j))
-					max_score = max(max_score,score)
-					if max_score == score:
-						black_stone_pos = (i,j)
+					if score > max_score:
+						max_score = score
+						black_stone_pos = [(i,j)]
+					elif score == max_score:
+						black_stone_pos.append((i,j))
+				#Reset board positions for next iteration
+				self.board["black"] = black
+				self.board["white"] = white
 		print()
 		return max_score, black_stone_pos
 
@@ -293,39 +297,43 @@ class Test:
 		max_score = 0
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
-				if (i,j) in self.board["black"]:
-					continue
-
-				if (i,j) in self.board["white"]:
+				if not self.should_check(i,j):
 					continue
 				
 				# we can safely test and add a white stone to the square
 				self.board["white"].add((i,j))
-				#See if the move is illegal
-				satisfiable = f"(i{i} j{j} C)" not in self.cap_white_stones
+				#Run test and see if the move is illegal
+				satisfiable = self.run(show_board=False)
+				satisfiable &= f"(i{i} j{j} C)" not in self.cap_white_stones
 
-				satisfiable &= self.run(show_board=False)
-
-				# print(f"testing at {i,j}")
 				if satisfiable:
 					max_score = max(len(self.cap_black_stones), max_score)
 				self.board["white"].remove((i,j))
 		return max_score
-
+	
+	def next_move(self):
+		print("-"*50+"\nTest:", self.description, "\n")	
+		output = self.next_black_move()
+		if output[0] == -1:
+			print("No valid move can be played")
+		elif len(output[1]) > 1: 
+			print("Best moves are:",output[1],"with score:", output[0])
+		else:
+			print("Best move is:",output[1][0],"with score:", output[0])
 		
 tests = [
 	Test(
 		'empty board',
 		{
-			"white": {},
-			"black": {},
+			"white": set(),
+			"black": set(),
 		},
 		True,
 	),
 	Test(
 		'single black stone',
 		{
-			"white": {},
+			"white": set(),
 			"black": {(1,2)},
 		},
 		True,
@@ -334,7 +342,7 @@ tests = [
 		'single white stone',
 		{
 			"white": {(1,2)},
-			"black": {},
+			"black": set(),
 		},
 		False,
 	),
@@ -382,7 +390,7 @@ tests = [
 		'full board white',
 		{
 			"white": {(i,j) for i in range(5) for j in range(5)},
-			"black": {},
+			"black": set(),
 		},
 		True,
 	), 
@@ -391,7 +399,7 @@ tests = [
 		'full board white, two eyes',
 		{
 			"white": {(i,j) for i in range(5) for j in range(5) if (i,j) not in [(1,2),(4,0)]},
-			"black": {},
+			"black": set(),
 		},
 		False,
 	), 
@@ -423,22 +431,12 @@ tests = [
 
 ]
 
-
-	
-
-
-
 def run_tests():
 	"""
 	Run a list of board configurations and what they should evaluate to. Prints to console.
 	"""
 	for test in tests:
-		# test.run(show_board=SHOWBOARD)
-		print(test.next_black_move())
-
-
-
-
+		test.next_move()
 
 if __name__ == "__main__":
 	# if CASE_NUMBER in range(len(tests)):
@@ -449,20 +447,20 @@ if __name__ == "__main__":
 	#     print()
 	#     run_tests()
 	#     print()
-	# run_tests()
+	run_tests()
 	
 	print()
 	
-	t = Test(
-		'single white stone surrounded by 3 black one white',
-		{
-			"white": {(1,2)},
-			"black": {(1,3),(2,2),(1,1)},
-		},
-		False,
-	)
-	output= t.next_black_move()
-	print("Best move is:",output[1]," with score:", output[0])
+	# t = Test(
+	# 	'single white stone surrounded by 3 black one white',
+	# 	{
+	# 		"white": {(1,2)},
+	# 		"black": {(1,3),(2,2),(1,1)},
+	# 	},
+	# 	False,
+	# )
+	# output = t.next_black_move()
+	# print("Best move is:",output[1]," with score:", output[0])
 
 	# t = Test(
 	# 	'single white stone surrounded by 3 black',
