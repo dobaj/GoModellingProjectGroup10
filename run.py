@@ -71,9 +71,9 @@ class Test:
 
 		self.blk_stones = set()
 		self.wht_stones = set()
+		self.oob_stones = set()
 		self.safe_stones = set()
-		self.cap_white_stones = set()
-		self.cap_black_stones = set()
+		self.cap_stones = set()
 
 		@proposition(self.E)
 		class WhiteOccupied(Hashable):
@@ -122,18 +122,12 @@ class Test:
 				return True
 			return False
 
-		def safe(i, j, color) -> bool:
+		def safe(i, j) -> bool:
 			for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
-				if color == "any" or color == "white":
-					if WhiteOccupied(i+di,j+dj) in self.wht_stones and Safe(i+di,j+dj) not in self.safe_stones:
-						self.E.add_constraint(Safe(i+di,j+dj))
-						self.safe_stones.add(Safe(i+di,j+dj))
-						safe(i+di,j+dj,"white")
-				if color == "any" or color == "black":
-					if BlackOccupied(i+di,j+dj) in self.blk_stones and Safe(i+di,j+dj) not in self.safe_stones:
-						self.E.add_constraint(Safe(i+di,j+dj))
-						self.safe_stones.add(Safe(i+di,j+dj))
-						safe(i+di,j+dj,"black")
+				if WhiteOccupied(i+di,j+dj) in self.wht_stones and Safe(i+di,j+dj) not in self.safe_stones:
+					self.E.add_constraint(Safe(i+di,j+dj))
+					self.safe_stones.add(Safe(i+di,j+dj))
+					safe(i+di,j+dj)
 
 		def add_from_board(board: dict):
 			black_stones = board["black"]
@@ -164,27 +158,21 @@ class Test:
 				for j in range(GRID_SIZE):
 					#If there is a liberty here
 					if not is_stone(i,j):
-						safe(i,j,"any")
+						safe(i,j)
 			for i in range(GRID_SIZE):
 				for j in range(GRID_SIZE):
-					#If a stone is not safe then it is captured
-					if Safe(i, j) not in self.safe_stones:
+					#If a white stone is not safe then it is captured
+					if WhiteOccupied(i, j) in self.wht_stones and Safe(i, j) not in self.safe_stones:
 						self.E.add_constraint(Captured(i, j))
-						if WhiteOccupied(i, j) in self.wht_stones:
-							self.cap_white_stones.add(Captured(i, j))
-						elif BlackOccupied(i,j) in self.blk_stones:
-							self.cap_black_stones.add(Captured(i, j))
-
+						self.cap_stones.add(Captured(i, j))
 		
 		def print_answer():
 			for j in range(GRID_SIZE):
 				out = ""
 				for i in range(GRID_SIZE):
-					if Captured(i, j) in self.cap_black_stones:
-						out+="🌑"
-					elif BlackOccupied(i, j) in self.blk_stones:
+					if BlackOccupied(i, j) in self.blk_stones:
 						out+="⚫"
-					elif Captured(i, j) in self.cap_white_stones:
+					elif Captured(i, j) in self.cap_stones:
 						out+="🚫"
 					elif WhiteOccupied(i, j) in self.wht_stones:
 						out+="⚪"
@@ -218,17 +206,12 @@ class Test:
 		return satisfiable
 
 	def print_dots(self):
-			self.run()
 			for j in range(GRID_SIZE):
 				out = ""
 				for i in range(GRID_SIZE):
-					if  f"(i{i} j{j} C)" in self.cap_black_stones:
-						out+="🌑"
-					elif f"(i{i} j{j} B)" in self.blk_stones:
+					if (i, j) in self.board["black"]:
 						out+="⚫"
-					elif f"(i{i} j{j} C)" in self.cap_white_stones:
-						out+="🚫"
-					elif f"(i{i} j{j} W)" in self.wht_stones:
+					elif (i, j) in self.board["white"]:
 						out+="⚪"
 					else:
 						out+="🟫"
@@ -245,6 +228,7 @@ class Test:
 		black_stone_pos = (-1,-1)
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
+				satisfiable = True
 				if (i,j) in self.board["black"]:
 					continue
 
@@ -253,30 +237,31 @@ class Test:
 				
 				#Remove already captured stones from both sides
 				self.run()
-				for cap in self.cap_white_stones:
+				for cap in self.cap_stones:
 					self.board["white"].remove((cap.i,cap.j))
-				for cap in self.cap_black_stones:
-					self.board["black"].remove((cap.i,cap.j))
-				
-				# we can add a black stone to the square
+				self.swap_boards()
+				self.run()
+				for cap in self.cap_stones:
+					self.board["white"].remove((cap.i,cap.j))
+				self.swap_boards()
+				# we can  add a black stone to the square
 				black = set(self.board["black"])
 				white = set(self.board["white"])
 
 				self.board["black"].add((i,j))
 				#See if the move is illegal
-				satisfiable = f"(i{i} j{j} C)" not in self.cap_black_stones
-
-				satisfiable &= self.run(show_board=False)
+				self.swap_boards()
+				self.run()
+				for cap in self.cap_stones:
+					if (cap.i,cap.j) == (i,j):
+						satisfiable = False
+				self.swap_boards()
 				# print(f"testing black stone at {i,j}")
 				print("#",end="",flush=True)
-				
+
+				satisfiable &= self.run(show_board=False)
 				if satisfiable:
-					score = len(self.cap_white_stones)
-					#Remove already captured stones
-					for cap in self.cap_white_stones:
-						self.board["white"].remove((cap.i,cap.j))
-					for cap in self.cap_black_stones:
-						self.board["black"].remove((cap.i,cap.j))
+					score = len(self.cap_stones)
 					score -= self.next_white_move()
 					#Reset board positions for next iteration
 					self.board["black"] = black
@@ -291,25 +276,41 @@ class Test:
 
 	def next_white_move(self) -> bool:
 		max_score = 0
+		self.swap_boards()
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
+				satisfiable = True
 				if (i,j) in self.board["black"]:
 					continue
 
 				if (i,j) in self.board["white"]:
 					continue
 				
-				# we can safely test and add a white stone to the square
-				self.board["white"].add((i,j))
-				#See if the move is illegal
-				satisfiable = f"(i{i} j{j} C)" not in self.cap_white_stones
+				#Remove already captured stones
+				self.run()
+				for cap in self.cap_stones:
+					self.board["white"].remove((cap.i,cap.j))
+				self.swap_boards()
+				self.run()
+				for cap in self.cap_stones:
+					self.board["white"].remove((cap.i,cap.j))
+				self.swap_boards()
 
-				satisfiable &= self.run(show_board=False)
+				# we can safely test and add a black to the square
+				self.board["black"].add((i,j))
+				#See if the move is illegal
+				self.swap_boards()
+				self.run()
+				for cap in self.cap_stones:
+					if (cap.i,cap.j) == (i,j):
+						satisfiable = False
+				self.swap_boards()
 
 				# print(f"testing at {i,j}")
+				satisfiable &= self.run(show_board=False)
 				if satisfiable:
-					max_score = max(len(self.cap_black_stones), max_score)
-				self.board["white"].remove((i,j))
+					max_score = max(len(self.cap_stones), max_score)
+					self.board["black"].remove((i,j))
 		return max_score
 
 		
