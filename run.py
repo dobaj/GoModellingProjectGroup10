@@ -159,7 +159,7 @@ class Test:
 		"""Prints a large line if clear is False, and if clear"""
 		width = get_terminal_size().columns
 		if clear:
-			print("\r"+"─"*width+"\n")
+				print("\r"+"─ "*(width//2)+"\n")
 		else:
 			print("━"*width)
 
@@ -183,27 +183,7 @@ class Test:
 				else:
 					out+="🟫"
 			print(out)
-
-	def should_check(self, i, j):
-		"""Checks if a piece is already in the board."""
-		if (i,j) in self.board["black"] or (i,j) in self.board["white"]:
-			return False
-		return True
-
-	def is_valid_move(self, i, j, player_set, other_set):
-		"""Checks if move at i j by player in player_set is valid based on 
-		whether it is captured and if it captures other pieces or if it 
-		simply is uncaptured."""
-		#If move is considered captured.
-		if f"(i{i} j{j} C)" in player_set:
-			for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
-				if f"(i{i+di} j{j+dj} C)" in other_set:
-					#If this move captures enemy's piece then it is okay
-					return True
-			return False
-		else:
-			return True
-
+	
 	def remove_captured_stones(self, first):
 		""" Removes stones based on the colour described in 'first' 
 		and reruns the board to see what stones of the opposite colour 
@@ -222,8 +202,44 @@ class Test:
 			self.run()
 			for cap in self.cap_black_stones:
 				self.board["black"].remove((cap.i,cap.j))
+
+	def should_check_pos(self, i, j):
+		"""Checks if a piece is already in the board."""
+		if (i,j) in self.board["black"] or (i,j) in self.board["white"]:
+			return False
+		return True
+
+	def check_valid_move(self, i, j, player_set, other_set):
+		"""Checks if move at i j by player in player_set is valid based on 
+		whether it is captured and if it captures other pieces or if it 
+		simply is uncaptured."""
+		#If move is considered captured.
+		if f"(i{i} j{j} C)" in player_set:
+			for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
+				if f"(i{i+di} j{j+dj} C)" in other_set:
+					#If this move captures enemy's piece then it is okay
+					return True
+			return False
+		else:
+			return True
 	
-	def next_black_move(self) -> bool:
+	def check_snapback(self, white_move, captured_white, i, j):
+		"""Checks for snap back by seeing if 
+		the best move for white was captured by black's last move"""
+		for b in range(len(white_move[2])):
+			wi, wj = white_move[1][b]
+			if f"(i{wi} j{wj} C)" in captured_white and white_move[0] > 1:
+				#Changes stones to be the move after white for displaying purposes.
+				self.cap_black_stones = white_move[2][b]
+				self.cap_white_stones = set()
+				self.board["white"].add((wi,wj))
+				self.print_line(True)
+				print("Potential snapback found - Black move:", (i,j), "White move:", white_move[1][b])
+				self.print_dots()
+	
+	def next_black_move(self):
+		"""Find the best possible black move(s), considering the best
+		possible move white could play to counter, and their score."""
 		max_score = None
 		black_stone_pos = [(-1,-1)] #List of best black moves
 		#Used for terminal progress bar
@@ -233,8 +249,8 @@ class Test:
 		self.run()
 		self.print_dots()
 		
-		#Remove already captured stones from both sides
-		self.remove_captured_stones("any")
+		#Remove already captured stones from both sides, starting with black
+		self.remove_captured_stones("black")
 
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
@@ -244,7 +260,7 @@ class Test:
 				print("\r"+"["+"─"*progress_width+" "*(terminal_width-progress_width)+"]",end="",flush=True)
 				progress+=1
 
-				if not self.should_check(i,j):
+				if not self.should_check_pos(i,j):
 					continue
 				
 				#Create a backup of current board
@@ -255,28 +271,22 @@ class Test:
 				self.board["black"].add((i,j))
 				#Run test and see if the move is illegal
 				satisfiable = self.run(show_board=False)
-				satisfiable &= self.is_valid_move(i,j,self.cap_black_stones,self.cap_white_stones)
+				satisfiable &= self.check_valid_move(i,j,
+									player_set=self.cap_black_stones,
+									other_set=self.cap_white_stones)
 
 				if satisfiable:
 					score = len(self.cap_white_stones)
 					captured_white = set(self.cap_white_stones) # copy set
-					#Remove already captured stones after this turn, starting with white
+					
+					#Remove captured stones after this turn starting with white
 					self.remove_captured_stones("white")
 					white_move = self.next_white_move()
 					score -= white_move[0]
 					
-					#Checks for snap back by seeing if 
-					# the best move for white was captured by black's last move
-					for b in range(len(white_move[2])):
-						wi, wj = white_move[1][b]
-						if f"(i{wi} j{wj} C)" in captured_white and white_move[0] > 1:
-							#Changes stones to be the move after white for displaying purposes.
-							self.cap_black_stones = white_move[2][b]
-							self.cap_white_stones = set()
-							self.board["white"].add((wi,wj))
-							self.print_line(True)
-							print("Potential snapback found - Black move:", (i,j), "White move:", white_move[1][b])
-							self.print_dots()
+					#Checks for potential snapback
+					self.check_snapback(white_move,captured_white, i,j)
+					
 					if max_score == None or score > max_score:
 						max_score = score
 						black_stone_pos = [(i,j)]
@@ -290,32 +300,39 @@ class Test:
 		self.run() #Refresh board positions
 		return max_score, black_stone_pos
 
-	def next_white_move(self) -> bool:
+	def next_white_move(self):
+		"""Finds the best possible white move(s), their score,
+		and the black stones they capture."""
 		max_score = None
 		white_stone_pos = [] #List of best white moves 
 		black_cap = [] #All black pieces captured by best white move
 		
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
-				if not self.should_check(i,j):
+				if not self.should_check_pos(i,j):
 					continue
 				
 				# we can safely test and add a white stone to the square
 				self.board["white"].add((i,j))
 				#Run test and see if the move is illegal
 				satisfiable = self.run(show_board=False)
-				satisfiable &= self.is_valid_move(i,j,self.cap_white_stones,self.cap_black_stones)
+				satisfiable &= self.check_valid_move(i,j,
+									player_set=self.cap_white_stones,
+									other_set=self.cap_black_stones)
 
-				if satisfiable:
-					score = len(self.cap_black_stones)
+				if not satisfiable:
+					continue
 
-					if max_score == None or score > max_score:
-						max_score = score
-						white_stone_pos = [(i,j)]
-						black_cap = [set(self.cap_black_stones)]
-					elif score == max_score:
-						white_stone_pos.append((i,j))
-						black_cap.append(set(self.cap_black_stones))
+				score = len(self.cap_black_stones)
+
+				#See if move is the best move so far
+				if max_score == None or score > max_score:
+					max_score = score
+					white_stone_pos = [(i,j)]
+					black_cap = [set(self.cap_black_stones)]
+				elif score == max_score:
+					white_stone_pos.append((i,j))
+					black_cap.append(set(self.cap_black_stones))
 				self.board["white"].remove((i,j))
 		return max_score, white_stone_pos, black_cap
 	
@@ -459,7 +476,14 @@ tests = [
 		},
 		False,
 	),   
-
+	Test(
+			'half and half board',
+			{
+				"white": {(0,0),(0,1),(0,2),(1,0),(1,2),(2,0),(2,1),(2,2),(3,0),(3,1),(3,2),(4,0),(4,1),(4,2)},
+				"black": {(0,3),(0,4),(1,3),(1,4),(2,4),(3,3),(3,4),(4,3),(4,4)},
+			},
+			False,
+		),   
 
 ]
 
