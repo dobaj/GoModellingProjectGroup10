@@ -1,7 +1,4 @@
-import sys
-
-from bauhaus import Encoding, proposition, constraint
-from bauhaus.utils import count_solutions, likelihood
+from bauhaus import Encoding, proposition
 from os import get_terminal_size
 
 # These two lines make sure a faster SAT solver is used.
@@ -12,7 +9,6 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 GRID_SIZE = 5
-CASE_NUMBER = -1
 
 
 
@@ -327,7 +323,7 @@ class Test:
 		self.print_line()
 		#Print test name
 		print("Test:", self.description, "\n")
-			
+
 		output = self.next_black_move()
 		if output[0] == None:
 			print("No valid move can be played")
