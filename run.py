@@ -212,7 +212,7 @@ class Test:
 			for cap in self.cap_black_stones:
 				self.board["black"].remove((cap.i,cap.j))
 
-	def is_stone(self, i, j):
+	def can_place(self, i, j):
 		"""Checks if a stone is already in the board in position (i,j)."""
 		if (i,j) in self.board["black"] or (i,j) in self.board["white"]:
 			return False
@@ -270,7 +270,7 @@ class Test:
 				self.print_progress(progress)
 				progress+=1
 
-				if not self.is_stone(i,j):
+				if not self.can_place(i,j):
 					continue
 				
 				#Create a backup of current board
@@ -319,7 +319,7 @@ class Test:
 		
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
-				if not self.is_stone(i,j):
+				if not self.can_place(i,j):
 					continue
 				
 				# we can safely test and add a white stone to the square

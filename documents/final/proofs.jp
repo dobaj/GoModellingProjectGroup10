@@ -1,0 +1,170 @@
+﻿CONJECTUREPANEL Theorems
+PROOF "P∨¬P"
+INFER P∨¬P 
+FORMULAE
+0 ⊥,
+1 ¬(P∨¬P),
+2 P∨¬P,
+3 P,
+4 ¬P,
+5 ¬(P∨¬P)
+IS
+SEQ ("contra (classical)"[A\2]) (cut[B,C\3,0]) ("contra (classical)"[A\3]) (cut[B,C\2,0]) (LAYOUT "∨ intro" (0) ("∨ intro(R)"[B,A\3,4]) (hyp[A\4])) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0]) (cut[B,C\2,0]) (LAYOUT "∨ intro" (0) ("∨ intro(L)"[B,A\4,3]) (hyp[A\3])) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL MostEpicSequents
+PROOF "∀x.∀y.(¬(QW(x)∨B(x))∧(Adj(x,y)∧(QW(y)∨B(y)))→Safe(y)), actual xi, actual xj, ¬QW(xi), ¬B(xi), QW(xj), Adj(xi,xj) ⊢ Safe(xj)"
+INFER ∀x.∀y.(¬(QW(x)∨B(x))∧(Adj(x,y)∧(QW(y)∨B(y)))→Safe(y)),
+     actual xi,
+     actual xj,
+     ¬QW(xi),
+     ¬B(xi),
+     QW(xj),
+     Adj(xi,xj)
+     ⊢ Safe(xj)
+FORMULAE
+0 Safe(xj),
+1 ¬(QW(xi)∨B(xi))∧(Adj(xi,xj)∧(QW(xj)∨B(xj))),
+2 ¬(QW(xi)∨B(xi))∧(Adj(xi,xj)∧(QW(xj)∨B(xj)))→Safe(xj),
+3 Adj(xi,xj)∧(QW(xj)∨B(xj)),
+4 ¬(QW(xi)∨B(xi)),
+5 ⊥,
+6 ¬B(xi),
+7 B(xi),
+8 ¬QW(xi),
+9 QW(xi),
+10 QW(xi)∨B(xi),
+11 QW(xi)∨B(xi)∨¬(QW(xi)∨B(xi)),
+12 (QW(xi)∨B(xi)),
+13 (QW(xi)∨B(xi))∨¬(QW(xi)∨B(xi)),
+14 actual xj,
+15 ∀y.(¬(QW(xi)∨B(xi))∧(Adj(xi,y)∧(QW(y)∨B(y)))→Safe(y)),
+16 ¬(QW(xi)∨B(xi))∧(Adj(xi,y)∧(QW(y)∨B(y)))→Safe(y),
+17 xj,
+18 y,
+19 ¬(QW(xi)∨B(xi))∧(Adj(xi,xj)∧(QW(xj)∨B(xj)))→Safe(xj),
+20 actual xi,
+21 ∀x.∀y.(¬(QW(x)∨B(x))∧(Adj(x,y)∧(QW(y)∨B(y)))→Safe(y)),
+22 ∀y.(¬(QW(x)∨B(x))∧(Adj(x,y)∧(QW(y)∨B(y)))→Safe(y)),
+23 xi,
+24 x,
+25 ∀y.(¬(QW(xi)∨B(xi))∧(Adj(xi,y)∧(QW(y)∨B(y)))→Safe(y)),
+26 QW(xj)∨B(xj),
+27 Adj(xi,xj),
+28 QW(xj),
+29 B(xj)
+IS
+SEQ (cut[B,C\26,0]) (LAYOUT "∨ intro" (0) ("∨ intro(L)"[B,A\29,28]) (hyp[A\28])) (cut[B,C\3,0]) ("∧ intro"[A,B\27,26]) (hyp[A\27]) (hyp[A\26]) (cut[B,C\25,0]) ("∀ elim"[P,i,x\22,23,24]) (hyp[A\21]) (hyp[A\20]) (cut[B,C\19,0]) ("∀ elim"[P,i,x\16,17,18]) (hyp[A\15]) (hyp[A\14]) (cut[B,C\13,0]) ("P∨¬P"[P\12]) ("∨ elim"[A,B,C\10,4,0]) (hyp[A\11]) ("∨ elim"[A,B,C\9,7,0]) (hyp[A\10]) (cut[B,C\5,0]) ("¬ elim"[B\9]) (hyp[A\9]) (hyp[A\8]) ("contra (constructive)"[B\0]) (hyp[A\5]) (cut[B,C\5,0]) ("¬ elim"[B\7]) (hyp[A\7]) (hyp[A\6]) ("contra (constructive)"[B\0]) (hyp[A\5]) (cut[B,C\1,0]) ("∧ intro"[A,B\4,3]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("→ elim"[A,B\1,0]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "¬¬P ⊢ P"
+INFER ¬¬P 
+     ⊢ P 
+FORMULAE
+0 ⊥,
+1 ¬¬P,
+2 ¬P,
+3 P 
+IS
+SEQ ("contra (classical)"[A\3]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "P→Q ⊢ ¬Q→¬P"
+INFER P→Q 
+     ⊢ ¬Q→¬P 
+FORMULAE
+0 ⊥,
+1 ¬Q,
+2 Q,
+3 P,
+4 P→Q,
+5 ¬P 
+IS
+SEQ ("→ intro"[A,B\1,5]) ("¬ intro"[A\3]) (cut[B,C\2,0]) ("→ elim"[A,B\3,2]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL MostEpicSequents
+PROOF "∀x.∀y.(QW(x)∧(QW(y)∧(Adj(x,y)∧Safe(y)))∨QB(x)∧(QB(y)∧(Adj(x,y)∧Safe(y)))→Safe(x)), actual xi, actual xj, QW(xi), QW(xj), Safe(xj), Adj(xi,xj) ⊢ Safe(xi)"
+INFER ∀x.∀y.(QW(x)∧(QW(y)∧(Adj(x,y)∧Safe(y)))∨QB(x)∧(QB(y)∧(Adj(x,y)∧Safe(y)))→Safe(x)),
+     actual xi,
+     actual xj,
+     QW(xi),
+     QW(xj),
+     Safe(xj),
+     Adj(xi,xj)
+     ⊢ Safe(xi)
+FORMULAE
+0 Safe(xi),
+1 QW(xi)∧(QW(xj)∧(Adj(xi,xj)∧Safe(xj)))∨QB(xi)∧(QB(xj)∧(Adj(xi,xj)∧Safe(xj))),
+2 QW(xi)∧(QW(xj)∧(Adj(xi,xj)∧Safe(xj)))∨QB(xi)∧(QB(xj)∧(Adj(xi,xj)∧Safe(xj)))→Safe(xi),
+3 actual xj,
+4 ∀y.(QW(xi)∧(QW(y)∧(Adj(xi,y)∧Safe(y)))∨QB(xi)∧(QB(y)∧(Adj(xi,y)∧Safe(y)))→Safe(xi)),
+5 QW(xi)∧(QW(y)∧(Adj(xi,y)∧Safe(y)))∨QB(xi)∧(QB(y)∧(Adj(xi,y)∧Safe(y)))→Safe(xi),
+6 xj,
+7 y,
+8 QW(xi)∧(QW(xj)∧(Adj(xi,xj)∧Safe(xj)))∨QB(xi)∧(QB(xj)∧(Adj(xi,xj)∧Safe(xj)))→Safe(xi),
+9 actual xi,
+10 ∀x.∀y.(QW(x)∧(QW(y)∧(Adj(x,y)∧Safe(y)))∨QB(x)∧(QB(y)∧(Adj(x,y)∧Safe(y)))→Safe(x)),
+11 ∀y.(QW(x)∧(QW(y)∧(Adj(x,y)∧Safe(y)))∨QB(x)∧(QB(y)∧(Adj(x,y)∧Safe(y)))→Safe(x)),
+12 xi,
+13 x,
+14 ∀y.(QW(xi)∧(QW(y)∧(Adj(xi,y)∧Safe(y)))∨QB(xi)∧(QB(y)∧(Adj(xi,y)∧Safe(y)))→Safe(xi)),
+15 QW(xi)∧(QW(xj)∧(Adj(xi,xj)∧Safe(xj))),
+16 QB(xi)∧(QB(xj)∧(Adj(xi,xj)∧Safe(xj))),
+17 QW(xj)∧(Adj(xi,xj)∧Safe(xj)),
+18 QW(xi),
+19 Adj(xi,xj)∧Safe(xj),
+20 QW(xj),
+21 Safe(xj),
+22 Adj(xi,xj)
+IS
+SEQ (cut[B,C\19,0]) ("∧ intro"[A,B\22,21]) (hyp[A\22]) (hyp[A\21]) (cut[B,C\17,0]) ("∧ intro"[A,B\20,19]) (hyp[A\20]) (hyp[A\19]) (cut[B,C\15,0]) ("∧ intro"[A,B\18,17]) (hyp[A\18]) (hyp[A\17]) (cut[B,C\1,0]) (LAYOUT "∨ intro" (0) ("∨ intro(L)"[B,A\16,15]) (hyp[A\15])) (cut[B,C\14,0]) ("∀ elim"[P,i,x\11,12,13]) (hyp[A\10]) (hyp[A\9]) (cut[B,C\8,0]) ("∀ elim"[P,i,x\5,6,7]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("→ elim"[A,B\1,0]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "P→Q, ¬Q ⊢ ¬P"
+INFER P→Q,
+     ¬Q 
+     ⊢ ¬P 
+FORMULAE
+0 ⊥,
+1 ¬Q,
+2 Q,
+3 P,
+4 P→Q 
+IS
+SEQ ("¬ intro"[A\3]) (cut[B,C\2,0]) ("→ elim"[A,B\3,2]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL MostEpicSequents
+PROOF "∀x.((QW(x)∨QB(x))∧¬Safe(x)→Capt(x)), actual xi, QB(xi), ¬Safe(xi) ⊢ Capt(xi)"
+INFER ∀x.((QW(x)∨QB(x))∧¬Safe(x)→Capt(x)),
+     actual xi,
+     QB(xi),
+     ¬Safe(xi)
+     ⊢ Capt(xi)
+FORMULAE
+0 Capt(xi),
+1 (QW(xi)∨QB(xi))∧¬Safe(xi),
+2 (QW(xi)∨QB(xi))∧¬Safe(xi)→Capt(xi),
+3 actual xi,
+4 ∀x.((QW(x)∨QB(x))∧¬Safe(x)→Capt(x)),
+5 (QW(x)∨QB(x))∧¬Safe(x)→Capt(x),
+6 xi,
+7 x,
+8 (QW(xi)∨QB(xi))∧¬Safe(xi)→Capt(xi),
+9 ¬Safe(xi),
+10 QW(xi)∨QB(xi),
+11 QB(xi),
+12 QW(xi),
+13 ∀x.((QW(x)∨QB(x))∧¬Safe(x)→Capt(x))
+IS
+SEQ (cut[B,C\10,0]) (LAYOUT "∨ intro" (0) ("∨ intro(R)"[B,A\12,11]) (hyp[A\11])) (cut[B,C\1,0]) ("∧ intro"[A,B\10,9]) (hyp[A\10]) (hyp[A\9]) (cut[B,C\8,0]) ("∀ elim"[P,i,x\5,6,7]) (hyp[A\4]) (hyp[A\3]) (cut[B,C\0,0]) ("→ elim"[A,B\1,0]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
+CONJECTUREPANEL Theorems
+PROOF "P ⊢ ¬¬P"
+INFER P 
+     ⊢ ¬¬P 
+FORMULAE
+0 ⊥,
+1 ¬P,
+2 P 
+IS
+SEQ ("¬ intro"[A\1]) (cut[B,C\0,0]) ("¬ elim"[B\2]) (hyp[A\2]) (hyp[A\1]) (hyp[A\0])
+END
