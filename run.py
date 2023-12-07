@@ -24,24 +24,13 @@ class Hashable:
 		return str(self)
 
 class Test:
-	def __init__(self, description: str, board: dict, captured: bool) -> None:
+	def __init__(self, description: str, board: dict) -> None:
 		self.description = description
 		self.board = board
-		self.answer = captured # our answer 
 
 
-
-	
-
-	def run(self, show_board: bool=False) -> bool:
+	def run(self) -> bool:
 		self.E = Encoding()
-
-		# Sets to hold our propositions
-		self.blk_stones = set()
-		self.wht_stones = set()
-		self.safe_stones = set()
-		self.cap_white_stones = set()
-		self.cap_black_stones = set()
 
 		@proposition(self.E)
 		class WhiteOccupied(Hashable):
@@ -83,8 +72,15 @@ class Test:
 			def __repr__(self):
 				return f"(i{self.i} j{self.j} C)"
 			
+		# Sets to hold our propositions
+		self.blk_stones = set()
+		self.wht_stones = set()
+		self.safe_stones = set()
+		self.cap_white_stones = set()
+		self.cap_black_stones = set()
+			
 		def is_stone(i, j) -> bool:
-			"""Sees if a given location has a stone."""
+			"""Sees if a given location (i,j) has a stone."""
 			if BlackOccupied(i,j) in self.blk_stones:
 				return True
 			if WhiteOccupied(i,j) in self.wht_stones:
@@ -92,16 +88,18 @@ class Test:
 			return False
 
 		def safe(i, j, color) -> bool:
-			"""Checks if a given color is safe based on whether it is adjacent to a 
-			stone of the same colour that is safe or a liberty."""
+			"""Checks if a given color is safe based on whether it is adjacent to 
+			either a stone of the same colour that is safe or a liberty."""
 			for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
 				if color == "any" or color == "white":
-					if WhiteOccupied(i+di,j+dj) in self.wht_stones and Safe(i+di,j+dj) not in self.safe_stones:
+					if WhiteOccupied(i+di,j+dj) in self.wht_stones \
+						and Safe(i+di,j+dj) not in self.safe_stones:
 						self.E.add_constraint(Safe(i+di,j+dj))
 						self.safe_stones.add(Safe(i+di,j+dj))
 						safe(i+di,j+dj,"white")
 				if color == "any" or color == "black":
-					if BlackOccupied(i+di,j+dj) in self.blk_stones and Safe(i+di,j+dj) not in self.safe_stones:
+					if BlackOccupied(i+di,j+dj) in self.blk_stones \
+						and Safe(i+di,j+dj) not in self.safe_stones:
 						self.E.add_constraint(Safe(i+di,j+dj))
 						self.safe_stones.add(Safe(i+di,j+dj))
 						safe(i+di,j+dj,"black")
@@ -125,8 +123,9 @@ class Test:
 						self.E.add_constraint(~WhiteOccupied(i, j))    
 
 		def add_constraints():
-			"""Adds all constraints to E for bauhaus."""
-				
+			"""Adds extra constraints such as no overlapping 
+			black/white and safe/captured. If a stone is not safe 
+			it also adds constraints that the stone is captured ."""
 			for i in range(GRID_SIZE):
 				for j in range(GRID_SIZE):
 					#Cannot have both stone colours on same pos, cant have a safe stone be captured
@@ -134,7 +133,7 @@ class Test:
 					self.E.add_constraint(~(Safe(i, j) & Captured(i, j))) 
 					#If there is a liberty here make surrounding stones of any colour safe
 					if not is_stone(i,j):
-						safe(i,j,"any")
+						safe(i,j,"any") #This then recursively reaches all connected stones
 			#After safeties are calculated, add unsafe stones to captured
 			for i in range(GRID_SIZE):
 				for j in range(GRID_SIZE):
@@ -151,22 +150,32 @@ class Test:
 
 		T = self.E.compile()
 
+		# Checks for contradicting constraints
 		satisfiable = T.satisfiable()
 
 		return satisfiable
 
-	def print_line(self, clear = False):
-		"""Prints a large line if clear is False, and if clear"""
+	def print_line(self, thin = False):
+		"""Prints a large line if clear is False, and if clear
+		is True, then prints a thin spaced line."""
 		width = get_terminal_size().columns
-		if clear:
+		if thin:
 				print("\r"+"─ "*(width//2)+"\n")
 		else:
 			print("━"*width)
+	
+	def print_progress(self, progress):
+		"""Prints a progress bar to display how far through a 
+		board the move lookahead is currently."""
+		total_runtime = GRID_SIZE**2
+		terminal_width = get_terminal_size().columns - 3
+		progress_width = progress*terminal_width//total_runtime
+		print("\r"+"["+"─"*progress_width+" "*(terminal_width-progress_width)+\
+			"]",end="",flush=True)
 
-	def print_dots(self, display_moves = []):
-		"""Prints all of the dots from the board and whether they are captured or not.
-		Needs to have the board populated. Can also have a display move that shows the best
-		move in red."""
+	def print_stones(self, display_moves = []):
+		"""Prints all of the stones from the board and whether they are captured or not.
+		Needs to have the board populated. Can also display best move(s) in red."""
 		for j in range(GRID_SIZE):
 			out = ""
 			for i in range(GRID_SIZE):
@@ -187,7 +196,7 @@ class Test:
 	def remove_captured_stones(self, first):
 		""" Removes stones based on the colour described in 'first' 
 		and reruns the board to see what stones of the opposite colour 
-		are considered taken. If first is 'any' then this rerun is 
+		are then considered taken. If first is 'any' then this rerun is 
 		ignored and all captured stones are immediately removed."""
 		if first == "black" or first == "any":
 			for cap in self.cap_black_stones:
@@ -203,16 +212,17 @@ class Test:
 			for cap in self.cap_black_stones:
 				self.board["black"].remove((cap.i,cap.j))
 
-	def should_check_pos(self, i, j):
-		"""Checks if a piece is already in the board."""
+	def is_stone(self, i, j):
+		"""Checks if a stone is already in the board in position (i,j)."""
 		if (i,j) in self.board["black"] or (i,j) in self.board["white"]:
 			return False
 		return True
 
 	def check_valid_move(self, i, j, player_set, other_set):
-		"""Checks if move at i j by player in player_set is valid based on 
-		whether it is captured and if it captures other pieces or if it 
-		simply is uncaptured."""
+		"""Checks if move at (i,j) by player in player_set is valid. 
+		If the move is captured but the surrounding pieces in the other 
+		colour are captured, then it is valid. If the move is not captured 
+		it is automatically valid."""
 		#If move is considered captured.
 		if f"(i{i} j{j} C)" in player_set:
 			for di,dj in [(1,0),(-1,0),(0,1),(0,-1)]:
@@ -224,30 +234,32 @@ class Test:
 			return True
 	
 	def check_snapback(self, white_move, captured_white, i, j):
-		"""Checks for snap back by seeing if 
-		the best move for white was captured by black's last move"""
+		"""Checks for snap back by seeing if a move for white 
+		that captures more than one black piece was captured by 
+		black's last move."""
 		for b in range(len(white_move[2])):
 			wi, wj = white_move[1][b]
 			if f"(i{wi} j{wj} C)" in captured_white and white_move[0] > 1:
 				#Changes stones to be the move after white for displaying purposes.
+				#These are later overwritten.
 				self.cap_black_stones = white_move[2][b]
 				self.cap_white_stones = set()
 				self.board["white"].add((wi,wj))
 				self.print_line(True)
-				print("Potential snapback found - Black move:", (i,j), "White move:", white_move[1][b])
-				self.print_dots()
+				print("Potential snapback found - Black move:", (i,j), 
+		  			"White move:", white_move[1][b])
+				self.print_stones()
 	
 	def next_black_move(self):
-		"""Find the best possible black move(s), considering the best
-		possible move white could play to counter, and their score."""
+		"""Find the best possible black move(s) and their score, 
+		considering the best possible move white could play to counter."""
 		max_score = None
-		black_stone_pos = [(-1,-1)] #List of best black moves
+		black_stone_pos = [] #List of best black moves
 		#Used for terminal progress bar
 		progress = 0
-		total_runtime = GRID_SIZE**2
 		
 		self.run()
-		self.print_dots()
+		self.print_stones()
 		
 		#Remove already captured stones from both sides, starting with black
 		self.remove_captured_stones("black")
@@ -255,12 +267,10 @@ class Test:
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
 				#Prints current progress in terminal window
-				terminal_width = get_terminal_size().columns - 3
-				progress_width = progress*terminal_width//total_runtime
-				print("\r"+"["+"─"*progress_width+" "*(terminal_width-progress_width)+"]",end="",flush=True)
+				self.print_progress(progress)
 				progress+=1
 
-				if not self.should_check_pos(i,j):
+				if not self.is_stone(i,j):
 					continue
 				
 				#Create a backup of current board
@@ -270,7 +280,7 @@ class Test:
 				# we can add a black stone to the square
 				self.board["black"].add((i,j))
 				#Run test and see if the move is illegal
-				satisfiable = self.run(show_board=False)
+				satisfiable = self.run()
 				satisfiable &= self.check_valid_move(i,j,
 									player_set=self.cap_black_stones,
 									other_set=self.cap_white_stones)
@@ -296,7 +306,7 @@ class Test:
 				#Reset board positions for next iteration
 				self.board["black"] = black
 				self.board["white"] = white
-		self.print_line(True)
+		self.print_line(thin=True)
 		self.run() #Refresh board positions
 		return max_score, black_stone_pos
 
@@ -309,13 +319,13 @@ class Test:
 		
 		for i in range(GRID_SIZE):
 			for j in range(GRID_SIZE):
-				if not self.should_check_pos(i,j):
+				if not self.is_stone(i,j):
 					continue
 				
 				# we can safely test and add a white stone to the square
 				self.board["white"].add((i,j))
 				#Run test and see if the move is illegal
-				satisfiable = self.run(show_board=False)
+				satisfiable = self.run()
 				satisfiable &= self.check_valid_move(i,j,
 									player_set=self.cap_white_stones,
 									other_set=self.cap_black_stones)
@@ -331,6 +341,8 @@ class Test:
 					elif score == max_score:
 						white_stone_pos.append((i,j))
 						black_cap.append(set(self.cap_black_stones))
+				
+				#remove our tested white stone
 				self.board["white"].remove((i,j))
 		return max_score, white_stone_pos, black_cap
 	
@@ -347,80 +359,71 @@ class Test:
 			print("Best moves are:",output[1],"with score:", output[0], "(Note every best move is shown on the board)")
 		else:
 			print("Best move is:",output[1][0],"with score:", output[0])
-		self.print_dots(output[1])
+		self.print_stones(output[1])
 		
 tests = [
-	# Test(
-	# 	'empty board',
-	# 	{
-	# 		"white": set(),
-	# 		"black": set(),
-	# 	},
-	# 	True,
-	# ),
-	# Test(
-	# 	'single black stone',
-	# 	{
-	# 		"white": set(),
-	# 		"black": {(1,2)},
-	# 	},
-	# 	True,
-	# ),
-	# Test(
-	# 	'single white stone',
-	# 	{
-	# 		"white": {(1,2)},
-	# 		"black": set(),
-	# 	},
-	# 	False,
-	# ),
+	Test(
+		'empty board',
+		{
+			"white": set(),
+			"black": set(),
+		}
+	),
+	Test(
+		'single black stone',
+		{
+			"white": set(),
+			"black": {(1,2)},
+		}
+	),
+	Test(
+		'single white stone',
+		{
+			"white": {(1,2)},
+			"black": set(),
+		}
+	),
 	Test(
 		'single white stone surrounded by black',
 		{
 			"white": {(1,2)},
 			"black": {(1,3),(0,2),(2,2),(1,1)},
-		},
-		True,
+		}
 	),
 	Test(
 		'single white stone surrounded by 3 black',
 		{
 			"white": {(1,2)},
 			"black": {(1,3),(2,2),(1,1)},
-		},
-		False,
+		}
 	),      
 	Test(
 		'single white stone surrounded by 3 black one white',
 		{
 			"white": {(1,2),(0,2)},
 			"black": {(1,3),(2,2),(1,1)},
-		},
-		False,
+		}
 	),  
 	Test(
 		'complicated case, no liberties',
 		{
 			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
 			"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-		},
-		True,
+		}
 	),   
 	Test(
 		'complicated case, 2 liberties',
 		{
 			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
 			"black": {(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-		},
-		False,
+		}
 	), 
 	Test(
 		'full board white',
 		{
 			"white": {(i,j) for i in range(5) for j in range(5)},
 			"black": set(),
-		},
-		True,
+		}
 	), 
 
 	Test(
@@ -428,8 +431,7 @@ tests = [
 		{
 			"white": {(i,j) for i in range(5) for j in range(5) if (i,j) not in [(1,2),(4,0)]},
 			"black": set(),
-		},
-		False,
+		}
 	), 
 	
 	Test(
@@ -437,24 +439,21 @@ tests = [
 		{
 			"white": {(2,2)},
 			"black": {(2,2)},
-		},
-		False,
+		}
 	),
 	Test(
 		'overlapping stones',
 		{
 			"white": {(1,2)},
 			"black": {(1,3),(0,2),(2,2),(1,1),(1,2)},
-		},
-		False,
+		}
 	),
 	Test(
 		'overlapping stones, complicated case, no liberties',
 		{
 			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
 			"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (1,3), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-		},
-		False,
+		}
 	),  
 
     Test(
@@ -462,8 +461,7 @@ tests = [
 		{
 			"white": {(1,0),(2,0),(3,0),(1,1),(1,2),(1,3),(1,4),(3,3),(4,1)},
 			"black": {(2,1),(2,2),(2,3),(2,4),(3,1),(3,2),(3,4),(4,2),(4,4)},
-		},
-		False,
+		}
 	),   
 	
     Test(
@@ -471,16 +469,14 @@ tests = [
 		{
 			"white": {(1,0),(2,0),(3,1),(3,2),(3,3),(0,1),(1,2),(2,3)},
 			"black": {(2,1),(1,1),(0,2),(0,3),(1,3)},
-		},
-		False,
+		}
 	),   
 	Test(
 			'half and half board',
 			{
 				"white": {(0,0),(0,1),(0,2),(1,0),(1,2),(2,0),(2,1),(2,2),(3,0),(3,1),(3,2),(4,0),(4,1),(4,2)},
 				"black": {(0,3),(0,4),(1,3),(1,4),(2,4),(3,3),(3,4),(4,3),(4,4)},
-			},
-			False,
+			}
 		),   
 
 ]
