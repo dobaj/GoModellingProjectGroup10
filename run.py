@@ -286,7 +286,7 @@ class Test:
 					
 					#Checks for potential snapback
 					self.check_snapback(white_move,captured_white, i,j)
-					
+
 					if max_score == None or score > max_score:
 						max_score = score
 						black_stone_pos = [(i,j)]
@@ -320,19 +320,17 @@ class Test:
 									player_set=self.cap_white_stones,
 									other_set=self.cap_black_stones)
 
-				if not satisfiable:
-					continue
+				if satisfiable:
+					score = len(self.cap_black_stones)
 
-				score = len(self.cap_black_stones)
-
-				#See if move is the best move so far
-				if max_score == None or score > max_score:
-					max_score = score
-					white_stone_pos = [(i,j)]
-					black_cap = [set(self.cap_black_stones)]
-				elif score == max_score:
-					white_stone_pos.append((i,j))
-					black_cap.append(set(self.cap_black_stones))
+					#See if move is the best move so far
+					if max_score == None or score > max_score:
+						max_score = score
+						white_stone_pos = [(i,j)]
+						black_cap = [set(self.cap_black_stones)]
+					elif score == max_score:
+						white_stone_pos.append((i,j))
+						black_cap.append(set(self.cap_black_stones))
 				self.board["white"].remove((i,j))
 		return max_score, white_stone_pos, black_cap
 	
@@ -376,88 +374,88 @@ tests = [
 	# 	},
 	# 	False,
 	# ),
-	# Test(
-	# 	'single white stone surrounded by black',
-	# 	{
-	# 		"white": {(1,2)},
-	# 		"black": {(1,3),(0,2),(2,2),(1,1)},
-	# 	},
-	# 	True,
-	# ),
-	# Test(
-	# 	'single white stone surrounded by 3 black',
-	# 	{
-	# 		"white": {(1,2)},
-	# 		"black": {(1,3),(2,2),(1,1)},
-	# 	},
-	# 	False,
-	# ),      
-	# Test(
-	# 	'single white stone surrounded by 3 black one white',
-	# 	{
-	# 		"white": {(1,2),(0,2)},
-	# 		"black": {(1,3),(2,2),(1,1)},
-	# 	},
-	# 	False,
-	# ),  
-	# Test(
-	# 	'complicated case, no liberties',
-	# 	{
-	# 		"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-	# 		"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-	# 	},
-	# 	True,
-	# ),   
-	# Test(
-	# 	'complicated case, 2 liberties',
-	# 	{
-	# 		"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-	# 		"black": {(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-	# 	},
-	# 	False,
-	# ), 
-	# Test(
-	# 	'full board white',
-	# 	{
-	# 		"white": {(i,j) for i in range(5) for j in range(5)},
-	# 		"black": set(),
-	# 	},
-	# 	True,
-	# ), 
+	Test(
+		'single white stone surrounded by black',
+		{
+			"white": {(1,2)},
+			"black": {(1,3),(0,2),(2,2),(1,1)},
+		},
+		True,
+	),
+	Test(
+		'single white stone surrounded by 3 black',
+		{
+			"white": {(1,2)},
+			"black": {(1,3),(2,2),(1,1)},
+		},
+		False,
+	),      
+	Test(
+		'single white stone surrounded by 3 black one white',
+		{
+			"white": {(1,2),(0,2)},
+			"black": {(1,3),(2,2),(1,1)},
+		},
+		False,
+	),  
+	Test(
+		'complicated case, no liberties',
+		{
+			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+			"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+		},
+		True,
+	),   
+	Test(
+		'complicated case, 2 liberties',
+		{
+			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+			"black": {(0,0), (1,1), (3,1), (1,2), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+		},
+		False,
+	), 
+	Test(
+		'full board white',
+		{
+			"white": {(i,j) for i in range(5) for j in range(5)},
+			"black": set(),
+		},
+		True,
+	), 
 
-	# Test(
-	# 	'full board white, two eyes',
-	# 	{
-	# 		"white": {(i,j) for i in range(5) for j in range(5) if (i,j) not in [(1,2),(4,0)]},
-	# 		"black": set(),
-	# 	},
-	# 	False,
-	# ), 
+	Test(
+		'full board white, two eyes',
+		{
+			"white": {(i,j) for i in range(5) for j in range(5) if (i,j) not in [(1,2),(4,0)]},
+			"black": set(),
+		},
+		False,
+	), 
 	
-	# Test(
-	# 	'overlapping stones, not capturable',
-	# 	{
-	# 		"white": {(2,2)},
-	# 		"black": {(2,2)},
-	# 	},
-	# 	False,
-	# ),
-	# Test(
-	# 	'overlapping stones',
-	# 	{
-	# 		"white": {(1,2)},
-	# 		"black": {(1,3),(0,2),(2,2),(1,1),(1,2)},
-	# 	},
-	# 	False,
-	# ),
-	# Test(
-	# 	'overlapping stones, complicated case, no liberties',
-	# 	{
-	# 		"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
-	# 		"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (1,3), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
-	# 	},
-	# 	False,
-	# ),  
+	Test(
+		'overlapping stones, not capturable',
+		{
+			"white": {(2,2)},
+			"black": {(2,2)},
+		},
+		False,
+	),
+	Test(
+		'overlapping stones',
+		{
+			"white": {(1,2)},
+			"black": {(1,3),(0,2),(2,2),(1,1),(1,2)},
+		},
+		False,
+	),
+	Test(
+		'overlapping stones, complicated case, no liberties',
+		{
+			"white": {(1,0), (2,1), (2,2), (3,2), (1,3), (2,3), (3,3)},
+			"black": {(0,0), (2,0), (1,1), (3,1), (1,2), (1,3), (4,2), (0,3), (4,3), (1,4), (2,4), (3,4)},
+		},
+		False,
+	),  
 
     Test(
 		'overlapping stones, complicated case, no liberties',
